@@ -85,6 +85,16 @@ ifeq ($(TOPLEVEL_LANG),verilog)
 	endif
 endif
 
+VERILOG_DESIGN?=\
+    ${INT_VERILOG_SOURCES} \
+    ${SIM_VERILOG_SOURCES} \
+    ${EXT_VERILOG_SOURCES} \
+    ${XILINX_SIM_SOURCES}
+
+VERILOG_SOURCES?=\
+    ${VERILOG_DESIGN} \
+    ${COCOTB_SOURCES}
+
 ${CDSLIB}:
 	echo "include \$${INCISIVE_HOME}/tools.lnx86/inca/files/cds.lib" > ${CDSLIB}
 
