@@ -19,49 +19,49 @@
  * limitations under the License.
  */
 
-module jtag_state_machine(
-        input tck,
-        input tms,
-        input trst,
+module jtag_state_machine (
+    input tck,
+    input tms,
+    input trst,
 
-        output state_tlr,
-        output state_capturedr,
-        output state_captureir,
-        output state_shiftdr,
-        output state_shiftir,
-        output state_updatedr,
-        output state_updateir
+    output state_tlr,
+    output state_capturedr,
+    output state_captureir,
+    output state_shiftdr,
+    output state_shiftir,
+    output state_updatedr,
+    output state_updateir
 
-    );
+);
 
-    localparam TEST_LOGIC_RESET = 4'h0;
-    localparam RUN_TEST_IDLE    = 4'h1;
-    localparam SELECT_DR        = 4'h2;
-    localparam CAPTURE_DR       = 4'h3;
-    localparam SHIFT_DR         = 4'h4;
-    localparam EXIT1_DR         = 4'h5;
-    localparam PAUSE_DR         = 4'h6;
-    localparam EXIT2_DR         = 4'h7;
-    localparam UPDATE_DR        = 4'h8;
-    localparam SELECT_IR        = 4'h9;
-    localparam CAPTURE_IR       = 4'hA;
-    localparam SHIFT_IR         = 4'hB;
-    localparam EXIT1_IR         = 4'hC;
-    localparam PAUSE_IR         = 4'hD;
-    localparam EXIT2_IR         = 4'hE;
-    localparam UPDATE_IR        = 4'hF;
+    localparam integer TEST_LOGIC_RESET = 4'h0;
+    localparam integer RUN_TEST_IDLE = 4'h1;
+    localparam integer SELECT_DR = 4'h2;
+    localparam integer CAPTURE_DR = 4'h3;
+    localparam integer SHIFT_DR = 4'h4;
+    localparam integer EXIT1_DR = 4'h5;
+    localparam integer PAUSE_DR = 4'h6;
+    localparam integer EXIT2_DR = 4'h7;
+    localparam integer UPDATE_DR = 4'h8;
+    localparam integer SELECT_IR = 4'h9;
+    localparam integer CAPTURE_IR = 4'hA;
+    localparam integer SHIFT_IR = 4'hB;
+    localparam integer EXIT1_IR = 4'hC;
+    localparam integer PAUSE_IR = 4'hD;
+    localparam integer EXIT2_IR = 4'hE;
+    localparam integer UPDATE_IR = 4'hF;
 
-    reg[3:0] state;
+    reg [3:0] state;
 
     always @(posedge tck or negedge trst) begin
-        if(~trst) begin
+        if (~trst) begin
             state <= TEST_LOGIC_RESET;
         end else begin
-            case(state)
+            case (state)
                 TEST_LOGIC_RESET: state <= tms ? TEST_LOGIC_RESET : RUN_TEST_IDLE;
                 RUN_TEST_IDLE:    state <= tms ? SELECT_DR : RUN_TEST_IDLE;
-                SELECT_DR :       state <= tms ? SELECT_IR : CAPTURE_DR;
-                CAPTURE_DR :      state <= tms ? EXIT1_DR : SHIFT_DR;
+                SELECT_DR:        state <= tms ? SELECT_IR : CAPTURE_DR;
+                CAPTURE_DR:       state <= tms ? EXIT1_DR : SHIFT_DR;
                 SHIFT_DR:         state <= tms ? EXIT1_DR : SHIFT_DR;
                 EXIT1_DR:         state <= tms ? UPDATE_DR : PAUSE_DR;
                 PAUSE_DR:         state <= tms ? EXIT2_DR : PAUSE_DR;
@@ -69,22 +69,23 @@ module jtag_state_machine(
                 UPDATE_DR:        state <= tms ? SELECT_DR : RUN_TEST_IDLE;
                 SELECT_IR:        state <= tms ? TEST_LOGIC_RESET : CAPTURE_IR;
                 CAPTURE_IR:       state <= tms ? EXIT1_IR : SHIFT_IR;
-                SHIFT_IR :        state <= tms ? EXIT1_IR : SHIFT_IR;
+                SHIFT_IR:         state <= tms ? EXIT1_IR : SHIFT_IR;
                 EXIT1_IR:         state <= tms ? UPDATE_IR : PAUSE_IR;
                 PAUSE_IR:         state <= tms ? EXIT2_IR : PAUSE_IR;
                 EXIT2_IR:         state <= tms ? UPDATE_IR : SHIFT_IR;
                 UPDATE_IR:        state <= tms ? SELECT_DR : RUN_TEST_IDLE;
+                default:          state <= TEST_LOGIC_RESET;
             endcase
         end
     end
 
     //I was going to use a function, but Vivado pooped itself when I tried. Typical...
-    assign state_tlr = (state == TEST_LOGIC_RESET);
+    assign state_tlr       = (state == TEST_LOGIC_RESET);
     assign state_capturedr = (state == CAPTURE_DR);
     assign state_captureir = (state == CAPTURE_IR);
-    assign state_shiftdr = (state == SHIFT_DR);
-    assign state_shiftir = (state == SHIFT_IR);
-    assign state_updatedr = (state == UPDATE_DR);
-    assign state_updateir = (state == UPDATE_IR);
+    assign state_shiftdr   = (state == SHIFT_DR);
+    assign state_shiftir   = (state == SHIFT_IR);
+    assign state_updatedr  = (state == UPDATE_DR);
+    assign state_updateir  = (state == UPDATE_IR);
 
 endmodule

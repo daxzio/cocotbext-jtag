@@ -12,7 +12,7 @@ lint:
 	#@echo $(addsprefix --rules, $(LINT_IGNORE))
 	verible-verilog-lint  \
 		--rules -always-comb,-no-trailing-spaces,-line-length,-unpacked-dimensions-range-ordering,-parameter-name-style,-enum-name-style,-generate-label,-macro-name-style \
-		${RTL_SOURCES} ${DUT_SOURCES}
+		${INT_VERILOG_SOURCES} ${COCOTB_SOURCES}
 
 format:
 	verible-verilog-format \
@@ -29,7 +29,7 @@ format:
 		--class_member_variable_alignment align \
 		--distribution_items_alignment align \
 		--enum_assignment_statement_alignment align \
-		${RTL_SOURCES} ${DUT_SOURCES}
+		${INT_VERILOG_SOURCES} ${COCOTB_SOURCES}
 
 # test:
 # 	verible-verilog-format \
