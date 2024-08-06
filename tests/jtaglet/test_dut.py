@@ -8,6 +8,7 @@ from cocotbext.jtag import JTAGDriver
 
 class testbench:
     def __init__(self, dut):
+    
         self.jtag = JTAGDriver(dut)
 #         self.jtag.indexes = [
 #             0x8,
@@ -21,6 +22,8 @@ class testbench:
             0xE: 32, # IDCODE_OP 
             0xF: 1,  # BYPASS_OP 
         }
+        self.userData_in = dut.userData_in
+        self.userData_in.setimmediatevalue(0)   
         self.clk = self.jtag.clk
         
  
@@ -29,7 +32,9 @@ class testbench:
 async def test_dut_basic(dut):
     
     tb = testbench(dut)
-    await tb.clk.wait_clkn(20)
+    await tb.jtag.reset_finished()
+    await tb.clk.wait_clkn(10)
+    
     await tb.jtag.send_val(0xc3, 0x9)
     await tb.jtag.enable_bypass()
     await tb.jtag.disable_bypass()

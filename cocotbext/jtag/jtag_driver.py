@@ -116,3 +116,6 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def disable_bypass(self):
         await self.send_val(0x0, 0xf)
+
+    async def reset_finished(self):
+        await self.reset.reset_finished()

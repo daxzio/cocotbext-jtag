@@ -29,6 +29,10 @@ class Reset:
         self.reset.value = (~self.reset_sense)  & 0x1
         self.finished = True
 
+    async def reset_finished(self):
+        while not self.finished:
+            await self.clk.wait_clkn()
+
 class ClkReset:
    def __init__(self, dut, period=10, clk_freq=None, reset_length=100, reset_sense=1, clkname='clk', resetname='reset'):
        self.clk_freq = clk_freq
