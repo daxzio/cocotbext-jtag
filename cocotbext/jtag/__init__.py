@@ -25,5 +25,9 @@ THE SOFTWARE.
 from .version import __version__
 
 from .jtag_driver import JTAGDriver
-# from .jtag_sink import JTAGSink
+from .jtag_driver import JTAGDevice
+from .jtag_driver import M3JTAGDevice
+from .jtag_driver import H3JTAGDevice
 
+# from .jtag_sink import JTAGSink
+from .clkreset import Reset

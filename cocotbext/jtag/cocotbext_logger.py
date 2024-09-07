@@ -1,6 +1,6 @@
 """
 
-Copyright (c) 2023 Daxzio
+Copyright (c) 2023-2024 Daxzio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -21,15 +21,30 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 
 """
+
 import logging
+from datetime import datetime
 
 
 class CocoTBExtLogger:
-    def __init__(self, name="default", enable=True):
+    def __init__(self, name="default", enable=True, start_year=2023):
+        current_year = datetime.now().year
+        if start_year == current_year:
+            self.copyright_year = f"{start_year}"
+        else:
+            self.copyright_year = f"{start_year}-{current_year}"
         self.name = name
         self.log = logging.getLogger(f"cocotb.{self.name}")
         if enable:
             self.enable_logging()
+
+    def units(self, value):
+        if value >= 1000_000:
+            return f"{value/1000000} M"
+        elif value >= 1000:
+            return f"{value/1000} k"
+        else:
+            return f"{value} "
 
     def enable_logging(self):
         self.log.setLevel(logging.DEBUG)
