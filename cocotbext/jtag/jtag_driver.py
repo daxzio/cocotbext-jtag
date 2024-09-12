@@ -27,126 +27,20 @@ from math import ceil
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import FallingEdge
 from cocotb import start_soon
-from cocotb_bus.bus import Bus
-
-# from cocotb.utils import get_sim_time
+from cocotb.clock import Clock
 
 from .version import __version__
 from .cocotbext_logger import CocoTBExtLogger
 from .clkreset import Clk, Reset
-
-
-class JTAGBus(Bus):
-    _signals = [
-        "tck",
-        "tms",
-        "tdi",
-        "tdo",
-    ]
-    _optional_signals = [
-        "trst",
-    ]
-
-    def __init__(self, entity=None, prefix=None, **kwargs):
-        super().__init__(
-            entity,
-            prefix,
-            self._signals,
-            optional_signals=self._optional_signals,
-            **kwargs,
-        )
-
-    @classmethod
-    def from_entity(cls, entity, **kwargs):
-        return cls(entity, **kwargs)
-
-    @classmethod
-    def from_prefix(cls, entity, prefix, **kwargs):
-        return cls(entity, prefix, **kwargs)
-
-
-class JTAGReg:
-    def __init__(self, name, width, address=None, ir_len=4):
-        self.name = name
-        self.width = width
-        self.address = address
-        self.ir_len = ir_len
-        if address is None:
-            if "BYPASS" == name:
-                self.address = (2**self.ir_len) - 1
-            elif "IDCODE" == name:
-                self.address = (2**self.ir_len) - 2
-
-    def __str__(self):
-        addrpad = ceil(self.ir_len / 4)
-        return f"0x{self.address:0{addrpad}x} {self.name} {self.width} {self.ir_len}"
-
-
-class JTAGDevice:
-
-    count = 0
-
-    def __init__(self, name="default", idcode=0x00000001, ir_len=4):
-        self.id = self.count
-        JTAGDevice.count += 1
-        self.name = name
-        self.idcode = idcode
-        self.ir_len = ir_len
-        self.names = {}
-        self.addresses = {}
-        self.add_jtag_reg("IDCODE", 32)
-        self.add_jtag_reg("BYPASS", 1)
-        self._ir_val_prev = None
-
-    @property
-    def ir_val_prev(self):
-        if self._ir_val_prev is None:
-            self._ir_val_prev = self.names["IDCODE"].address
-        return self._ir_val_prev
-
-    @ir_val_prev.setter
-    def ir_val_prev(self, value):
-        self._ir_val_prev = value
-
-    def add_jtag_reg(
-        self,
-        name,
-        width,
-        address=None,
-    ):
-        jr = JTAGReg(name, width, address, self.ir_len)
-        self.names[jr.name] = jr
-        self.addresses[jr.address] = jr
-
-    def print_regs(self):
-        print(self)
-        for k, v in sorted(self.addresses.items()):
-            #             print(k, v)
-            print(v)
-
-    def __str__(self):
-        return f"Device: {self.id} {self.name} idcode 0x{self.idcode:08x}"
-
-
-class M3JTAGDevice(JTAGDevice):
-    def __init__(self, name="CortexM3", idcode=0x4BA00477, ir_len=4):
-        super().__init__(name, idcode, ir_len)
-        self.add_jtag_reg("EXTEST", 1, 0x0)
-        self.add_jtag_reg("ABORT", 35, 0x8)
-        self.add_jtag_reg("DPACC", 35, 0xA)
-        self.add_jtag_reg("APACC", 35, 0xB)
-
-
-class H3JTAGDevice(JTAGDevice):
-    def __init__(self, name="Hazard5", idcode=0x70982603, ir_len=5):
-        super().__init__(name, idcode, ir_len)
+from .jtag_bus import JTAGBus
 
 
 class JTAGDriver(CocoTBExtLogger):
     def __init__(
         self,
-        dut,
+        bus,
         period=100,
+        units="ns",
         logging_enabled=True,
     ):
         CocoTBExtLogger.__init__(
@@ -161,12 +55,16 @@ class JTAGDriver(CocoTBExtLogger):
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
         self.log.info(f"    JTAG CLock Frequency: {self.units(self.frequency)}Hz")
 
-        self.bus = JTAGBus(dut)
+        self.bus = bus
 
-        self.clk = Clk(dut, period=self.period, clkname="tck")
+        start_soon(Clock(self.bus.tck, self.period, units=units).start())
+
         if hasattr(self.bus, "trst"):
             self.reset = Reset(
-                dut, self.clk, reset_sense=0, resetname="trst", reset_length=10
+                self.bus.trst,
+                self.bus.tck,
+                reset_sense=0,
+                reset_length=10,
             )
             self.log.info(f"    JTAG Reset is present")
         else:
@@ -177,13 +75,18 @@ class JTAGDriver(CocoTBExtLogger):
         self.explict_ir = False
         self.suppress_log = False
         self.random_pause = False
-        self.device_prev = None
+        #         self.device_prev = None
+        self.total_ir_val_prev = None
 
         self.devices = []
         self.device = 0
 
+    #     async def wait_clkn(self, length=1):
+    #         await self.clk.wait_clkn(length)
+
     async def wait_clkn(self, length=1):
-        await self.clk.wait_clkn(length)
+        for i in range(int(length)):
+            await RisingEdge(self.bus.tck)
 
     @property
     def active_device(self):
@@ -228,33 +131,37 @@ class JTAGDriver(CocoTBExtLogger):
                 f"Device: {self.device} - Addr: 0x{self.ir_val:0{irpad}x} Expected: 0x{self.dr_val:0{drpad}x}"
             )
 
+        self.total_ir_len2 = 0
+        self.total_ir_val = 0
+        for i, d in reversed(list(enumerate(self.devices))):
+            if i == device:
+                val = self.ir_val
+            else:
+                val = self.devices[i].names["BYPASS"].address
+            self.total_ir_val += val << self.total_ir_len2
+            self.total_ir_len2 += d.ir_len
+
         self.bus.tms.value = 0
         #         self.bus.tdi.value = 0
         await FallingEdge(self.bus.tck)
         self.bus.tms.value = 1  # Select DR
         # If the IR is the same as the last time we can move straight to DR
         # except if we want it to be explict everyt time. Implicit is the default
-        if (
-            not (
-                self.ir_val == self.active_device.ir_val_prev
-                and self.device == self.device_prev
-            )
-            or self.explict_ir
-        ):
+        if not (self.total_ir_val_prev == self.total_ir_val) or self.explict_ir:
             await FallingEdge(self.bus.tck)
             self.bus.tms.value = 1  # Select IR
             await FallingEdge(self.bus.tck)
             self.bus.tdi.value = 0  # ?
             self.bus.tms.value = 0  # Capture IR
             await FallingEdge(self.bus.tck)
-            for i, d in reversed(list(enumerate(self.devices))):
-                # print(i, device, d.ir_len, self.ir_val)
-                for j in range(d.ir_len):
-                    await FallingEdge(self.bus.tck)
-                    if i == device:
-                        self.bus.tdi.value = (self.ir_val >> j) & 0x1  # Shift IR
-                    else:
-                        self.bus.tdi.value = 1  # Shift IR
+
+            # print(f"{self.total_ir_len} 0x{self.total_ir_val:04x}")
+            for i in range(self.total_ir_len2):
+                await FallingEdge(self.bus.tck)
+
+                # self.log.info(f"{i} - {(self.total_ir_val >> i) & 0x1}")
+                self.bus.tdi.value = (self.total_ir_val >> i) & 0x1  # Shift IR
+
             self.bus.tms.value = 1
             await FallingEdge(self.bus.tck)  # Exit1 IR
             await FallingEdge(self.bus.tck)  # Update IR
@@ -282,10 +189,11 @@ class JTAGDriver(CocoTBExtLogger):
         await RisingEdge(self.bus.tck)
         #         self.ir_val_prev = self.ir_val
         self.device_prev = self.device
-        self.active_device.ir_val_prev = self.ir_val
+        self.total_ir_val_prev = self.total_ir_val
 
     async def write_val(self, val, addr=None, device=0):
         await self.send_val(val, addr, device, write=True)
+        self.suppress_log = False
 
     async def read_val(self, val, addr=None, device=0):
         await self.send_val(val, addr, device, write=False)
@@ -297,7 +205,7 @@ class JTAGDriver(CocoTBExtLogger):
             await RisingEdge(self.bus.tck)
         for i in range(self.dr_len):
             await RisingEdge(self.bus.tck)
-            #             print(f"{i} {self.bus.tdo.value}")
+            # print(f"{i} {self.bus.tdo.value}")
             # self.log.info(f"{i} {self.bus.tdo.value}")
             self.ret_val += self.bus.tdo.value << i
         #         if not self.suppress_log:
@@ -311,15 +219,17 @@ class JTAGDriver(CocoTBExtLogger):
         self.suppress_log = False
 
     async def enable_bypass(self, device=0):
+        raise
         self.device = device
         self.suppress_log = True
-        await self.write_val(0x1, "BYPASS", device)
+        await self.write_val(0x1, "BYPASS", self.device)
         self.log.info(f"Device: {self.device} - Enable BYPASS")
 
     async def disable_bypass(self, device=0):
+        raise
         self.device = device
         self.suppress_log = True
-        await self.write_val(0x0, "BYPASS", device)
+        await self.write_val(0x0, "BYPASS", self.device)
         self.log.info(f"Device: {self.device} - Disable BYPASS")
 
     async def reset_finished(self):
@@ -328,6 +238,8 @@ class JTAGDriver(CocoTBExtLogger):
     async def read_idcode(self, device=0):
         self.device = device
         self.suppress_log = True
-        await self.send_val(self.active_device.idcode, "IDCODE", device, write=False)
+        await self.send_val(
+            self.active_device.idcode, "IDCODE", self.device, write=False
+        )
         self.idcode = self.ret_val
         self.log.info(f"Device: {self.device} - IDCODE: 0x{self.idcode:08x}")

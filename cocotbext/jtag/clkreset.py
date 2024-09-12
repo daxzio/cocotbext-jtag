@@ -25,11 +25,18 @@ THE SOFTWARE.
 from cocotb.clock import Clock
 from cocotb import start_soon
 from cocotb.triggers import RisingEdge, Timer
+from cocotb.handle import ModifiableObject
 
 
 class Clk:
     def __init__(self, dut, period=10, units="ns", clkname="clk"):
-        self.clk = getattr(dut, clkname)
+#         print(clkname)
+#         self.clk = getattr(dut, clkname)
+        try:
+            self.clk = getattr(dut, clkname)
+        except AttributeError:
+            self.clk = dut
+        self.name = clkname
         self.period = period
         start_soon(Clock(self.clk, self.period, units=units).start())
 
@@ -40,22 +47,41 @@ class Clk:
 
 class Reset:
     def __init__(self, dut, clk, reset_length=100, reset_sense=1, resetname="reset"):
-        self.reset = getattr(dut, resetname)
+
+        #         if isinstance(dut, ModifiableObject):
+        #             self.reset = dut
+        #             print(True)
+        #         else:
+        #             self.reset = getattr(dut, resetname)
+        #         self.reset = getattr(dut, resetname)
+        try:
+            self.reset = getattr(dut, resetname)
+        except AttributeError:
+            self.reset = dut
+#         print(clk)
+        self.clk = clk
         self.reset_length = reset_length
         self.reset_sense = reset_sense
-        self.clk = clk
         self.finished = False
 
         self.reset.setimmediatevalue(self.reset_sense)
         start_soon(self.set_reset())
 
+    async def wait_clkn(self, length=1):
+        #print(self.clk.name)
+        if isinstance(self.clk, Clk):
+            await self.clk.wait_clkn(length)
+        else:
+            for i in range(int(length)):
+                await RisingEdge(self.clk)
+
     async def set_reset(self, reset_length=None):
         if reset_length is None:
             reset_length = self.reset_length
-        await self.clk.wait_clkn(reset_length)
+        await self.wait_clkn(reset_length)
         self.reset.value = (self.reset_sense) & 0x1
         self.finished = False
-        await self.clk.wait_clkn(reset_length)
+        await self.wait_clkn(reset_length)
         self.reset.value = (~self.reset_sense) & 0x1
         self.finished = True
 

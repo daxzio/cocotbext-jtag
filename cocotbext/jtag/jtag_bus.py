@@ -22,16 +22,33 @@ THE SOFTWARE.
 
 """
 
-from .version import __version__
+from cocotb_bus.bus import Bus
 
-from .jtag_driver import JTAGDriver
-from .jtag_monitor import JTAGMonitor
-from .jtag_bus import JTAGBus
-from .jtag_device import JTAGDevice
 
-# from .jtag_driver import EnJTAGDevice
-# from .jtag_driver import M3JTAGDevice
-# from .jtag_driver import H3JTAGDevice
+class JTAGBus(Bus):
+    _signals = [
+        "tck",
+        "tms",
+        "tdi",
+        "tdo",
+    ]
+    _optional_signals = [
+        "trst",
+    ]
 
-# from .jtag_sink import JTAGSink
-from .clkreset import Reset
+    def __init__(self, entity=None, prefix=None, **kwargs):
+        super().__init__(
+            entity,
+            prefix,
+            self._signals,
+            optional_signals=self._optional_signals,
+            **kwargs,
+        )
+
+    @classmethod
+    def from_entity(cls, entity, **kwargs):
+        return cls(entity, **kwargs)
+
+    @classmethod
+    def from_prefix(cls, entity, prefix, **kwargs):
+        return cls(entity, prefix, **kwargs)
