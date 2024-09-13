@@ -46,48 +46,36 @@ class Clk:
 
 
 class Reset:
-    def __init__(self, dut, clk, reset_length=100, reset_sense=1, resetname="reset"):
+    def __init__(self, dut, clk=None, reset_length=100, reset_sense=1, resetname="reset", units="ns"):
 
-        #         if isinstance(dut, ModifiableObject):
-        #             self.reset = dut
-        #             print(True)
-        #         else:
-        #             self.reset = getattr(dut, resetname)
-        #         self.reset = getattr(dut, resetname)
         try:
             self.reset = getattr(dut, resetname)
         except AttributeError:
             self.reset = dut
-#         print(clk)
+
         self.clk = clk
         self.reset_length = reset_length
-        self.reset_sense = reset_sense
+        self.reset_sense = bool(reset_sense)
+        self.units = units
         self.finished = False
 
         self.reset.setimmediatevalue(self.reset_sense)
         start_soon(self.set_reset())
 
-    async def wait_clkn(self, length=1):
-        #print(self.clk.name)
-        if isinstance(self.clk, Clk):
-            await self.clk.wait_clkn(length)
-        else:
-            for i in range(int(length)):
-                await RisingEdge(self.clk)
-
     async def set_reset(self, reset_length=None):
         if reset_length is None:
             reset_length = self.reset_length
-        await self.wait_clkn(reset_length)
-        self.reset.value = (self.reset_sense) & 0x1
+        
+        await Timer(reset_length, units=self.units)
+        self.reset.value = self.reset_sense
         self.finished = False
-        await self.wait_clkn(reset_length)
-        self.reset.value = (~self.reset_sense) & 0x1
+        await Timer(reset_length, units=self.units)
+        self.reset.value = ~self.reset_sense
         self.finished = True
 
     async def reset_finished(self):
         while not self.finished:
-            await self.clk.wait_clkn()
+            await Timer(10, units=self.units)
 
 
 class ClkReset:

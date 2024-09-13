@@ -1,0 +1,176 @@
+"""
+
+Copyright (c) 2024 Daxzio
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+
+"""
+from enum import Enum
+class JTAGState(Enum):
+    TEST_LOGIC_RESET = 0x0
+    RUN_TEST_IDLE    = 0x1
+    SELECT_DR        = 0x2
+    CAPTURE_DR       = 0x3
+    SHIFT_DR         = 0x4
+    EXIT1_DR         = 0x5
+    PAUSE_DR         = 0x6
+    EXIT2_DR         = 0x7
+    UPDATE_DR        = 0x8
+    SELECT_IR        = 0x9
+    CAPTURE_IR       = 0xA
+    SHIFT_IR         = 0xB
+    EXIT1_IR         = 0xC
+    PAUSE_IR         = 0xD
+    EXIT2_IR         = 0xE
+    UPDATE_IR        = 0xF
+
+class JTAGTxSm:
+    def __init__(self):
+        self.state = JTAGState.TEST_LOGIC_RESET
+        self.dr_cnt = 0
+        self.dr_val_in = 0
+        self.dr_val_out = 0
+        self.ir_cnt = 0
+        self.ir_val_in = 0
+
+    def update_state(self, bus):            
+        
+        if self.state == "TEST_LOGIC_RESET":
+            if stuff:
+                self.state = "RUN_TEST_IDLE"
+                bus.tms.value = False
+        elif self.state == "RUN_TEST_IDLE":
+            if bus.tms.value:
+                self.state = "SELECT_DR"
+            else:
+                self.state = "RUN_TEST_IDLE"
+
+class JTAGRxSm:
+    def __init__(self):
+        self.state = "TEST_LOGIC_RESET"
+        self.dr_cnt = 0
+        self.dr_val_in = 0
+        self.dr_val_out = 0
+        self.ir_cnt = 0
+        self.ir_val_in = 0
+           
+    def update_state(self, bus):            
+
+        if self.state == "CAPTURE_DR":
+            self.dr_cnt = 0
+            self.dr_val_in = 0
+            self.dr_val_out = 0
+        elif self.state == "SHIFT_DR":
+            self.dr_val_in += int(bus.tdi.value) << self.dr_cnt
+            self.dr_val_out += int(bus.tdo.value) << self.dr_cnt
+            self.dr_cnt += 1
+        elif self.state == "UPDATE_DR":
+            pass
+            #print(f"dr cnt {self.dr_cnt} 0x{self.dr_val_in:08x} 0x{self.dr_val_out:08x}")
+        elif self.state == "CAPTURE_IR":
+            self.ir_cnt = 0
+            self.ir_val_in = 0
+        elif self.state == "SHIFT_IR":
+            self.ir_val_in += int(bus.tdi.value) << self.ir_cnt
+            self.ir_cnt += 1
+        elif self.state == "UPDATE_IR":
+            pass
+            #print(f"ir_cnt {self.ir_cnt} 0x{self.ir_val_in:08x}")
+
+
+        if self.state == "TEST_LOGIC_RESET":
+            if not bus.tms.value:
+                self.state = "RUN_TEST_IDLE"
+        elif self.state == "RUN_TEST_IDLE":
+            if bus.tms.value:
+                self.state = "SELECT_DR"
+            else:
+                self.state = "RUN_TEST_IDLE"
+        elif self.state == "SELECT_DR":
+            if bus.tms.value:
+                self.state = "SELECT_IR"
+            else:
+                self.state = "CAPTURE_DR"
+        elif self.state == "CAPTURE_DR":
+            if bus.tms.value:
+                self.state = "EXIT1_DR"
+            else:
+                self.state = "SHIFT_DR"
+        elif self.state == "SHIFT_DR":
+            if bus.tms.value:
+                self.state = "EXIT1_DR"
+            else:
+                self.state = "SHIFT_DR"
+        elif self.state == "EXIT1_DR":
+            if bus.tms.value:
+                self.state = "UPDATE_DR"
+            else:
+                self.state = "PAUSE_DR"
+        elif self.state == "PAUSE_DR":
+            if bus.tms.value:
+                self.state = "EXIT2_DR"
+            else:
+                self.state = "PAUSE_DR"
+        elif self.state == "EXIT2_DR":
+            if bus.tms.value:
+                self.state = "UPDATE_DR"
+            else:
+                self.state = "SHIFT_DR"
+        elif self.state == "UPDATE_DR":
+            if bus.tms.value:
+                self.state = "SELECT_DR"
+            else:
+                self.state = "RUN_TEST_IDLE"
+        elif self.state == "SELECT_IR":
+            if bus.tms.value:
+                self.state = "TEST_LOGIC_RESET"
+            else:
+                self.state = "CAPTURE_IR"
+        elif self.state == "CAPTURE_IR":
+            if bus.tms.value:
+                self.state = "EXIT1_IR"
+            else:
+                self.state = "SHIFT_IR"
+        elif self.state == "SHIFT_IR":
+            if bus.tms.value:
+                self.state = "EXIT1_IR"
+            else:
+                self.state = "SHIFT_IR"
+        elif self.state == "EXIT1_IR":
+            if bus.tms.value:
+                self.state = "UPDATE_IR"
+            else:
+                self.state = "PAUSE_IR"
+        elif self.state == "PAUSE_IR":
+            if bus.tms.value:
+                self.state = "EXIT2_IR"
+            else:
+                self.state = "PAUSE_IR"
+        elif self.state == "EXIT2_IR":
+            if bus.tms.value:
+                self.state = "UPDATE_IR"
+            else:
+                self.state = "SHIFT_IR"
+        elif self.state == "UPDATE_IR":
+            if bus.tms.value:
+                self.state = "SELECT_DR"
+            else:
+                self.state = "RUN_TEST_IDLE"
+        else:
+         	raise Exception(f"Unknown state {self.state}")

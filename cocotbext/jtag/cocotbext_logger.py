@@ -38,7 +38,7 @@ class CocoTBExtLogger:
         if enable:
             self.enable_logging()
 
-    def units(self, value):
+    def siunits(self, value):
         if value >= 1000_000:
             return f"{value/1000000} M"
         elif value >= 1000:
