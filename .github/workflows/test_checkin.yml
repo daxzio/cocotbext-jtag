@@ -20,7 +20,7 @@ jobs:
       - name: Run lint
         continue-on-error: true
         run: |
-          pyflakes myhdl
+          pyflakes cocotbext
  
 #   build_ghdl_linux:
 #     #uses: daxzio/setup-eda/.github/workflows/setup_ghdl.yml@main
