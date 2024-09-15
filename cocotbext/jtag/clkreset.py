@@ -70,7 +70,7 @@ class Reset:
         self.reset.value = self.reset_sense
         self.finished = False
         await Timer(reset_length, units=self.units)
-        self.reset.value = ~self.reset_sense
+        self.reset.value = not(self.reset_sense)
         self.finished = True
 
     async def reset_finished(self):

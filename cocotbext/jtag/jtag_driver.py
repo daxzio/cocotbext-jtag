@@ -36,7 +36,7 @@ from .cocotbext_logger import CocoTBExtLogger
 from .clkreset import Clk, Reset
 from .jtag_bus import JTAGBus
 from .gatedclock import GatedClock
-from .jtag_sm import JTAGRxSm
+from .jtag_sm import JTAGTxSm, JTAGRxSm
 
 
 class JTAGDriver(CocoTBExtLogger):
@@ -63,10 +63,12 @@ class JTAGDriver(CocoTBExtLogger):
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
 
         self.bus = bus
+        self.tx_fsm = JTAGTxSm()
+        self.rx_fsm = JTAGRxSm()
 
         #start_soon(Clock(self.bus.tck, self.period, units=units).start())
         self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False)
-        start_soon(self.gc.start())
+        start_soon(self.gc.start(start_high=False))
 
         if hasattr(self.bus, "trst"):
             self.reset = Reset(
@@ -86,7 +88,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.suppress_log = False
         self.random_pause = False
         #         self.device_prev = None
-        self.total_ir_val_prev = None
+#         self.total_ir_val_prev = None
 
         self.devices = []
         self.device = 0
@@ -128,23 +130,24 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def set_reset(self, num=10):
         if hasattr(self, 'reset'):
+            self.tx_fsm.reset_state()
+            self.rx_fsm.reset_state()
             await self.reset.set_reset(num)
         else:
             self.log.warning('JTAG has no reset, doing nothing!')
 
     async def _jtag_fsm(self):
-        self.fsm = JTAGRxSm()
         while True:
             await RisingEdge(self.bus.tck)
-            self.log.debug(self.fsm.state)
-            self.fsm.update_state(self.bus)
+            self.log.debug(self.rx_fsm.state)
+            self.rx_fsm.update_state(self.bus)
 
     async def _parse_tdo(self):
         while True:
             await RisingEdge(self.bus.tck)
-            if 'UPDATE_DR' == self.fsm.state:
-                #print(f"0x{self.fsm.dr_val_out:08x} {self.device}")
-                self.ret_val = self.fsm.dr_val_out >> (len(self.devices) - 1 - self.device)
+            if 'UPDATE_DR' == self.rx_fsm.state:
+#                 print(f"0x{self.rx_fsm.dr_val_out:08x} {self.device}")
+                self.ret_val = self.rx_fsm.dr_val_out >> (len(self.devices) - 1 - self.device)
                 if not self.dr_val is None:
                     if not self.ret_val == self.dr_val and not self.write:
                         raise Exception(
@@ -161,11 +164,10 @@ class JTAGDriver(CocoTBExtLogger):
             await FallingEdge(self.bus.tck)
         #self.bus.tms.value = 0
         self.clock_gated = False
-        self.total_ir_val_prev = None
+#         self.total_ir_val_prev = None
 
     async def send_val(self, val=None, addr=0, device=0, write=True):
         self.device = device
-        self.clock_gated = True
         self.write = write
         if isinstance(addr, str):
             addr = self.active_device.names[addr].address
@@ -177,6 +179,8 @@ class JTAGDriver(CocoTBExtLogger):
         self.ir_val = addr
         self.dr_len = self.active_device.addresses[addr].width
         self.dr_val = val
+        self.total_dr_val = val << (len(self.devices) - 1 - self.device)
+        self.total_dr_len = self.dr_len + len(self.devices) - 1
 
         if not self.suppress_log:
             irpad = ceil(self.active_device.ir_len / 4)
@@ -200,77 +204,39 @@ class JTAGDriver(CocoTBExtLogger):
             self.total_ir_val += v << self.total_ir_len2
             self.total_ir_len2 += d.ir_len
 
-        self.bus.tms.value = 0
-        #         self.bus.tdi.value = 0
-        await FallingEdge(self.bus.tck)
-        self.bus.tms.value = 1  # Select DR
-        # If the IR is the same as the last time we can move straight to DR
-        # except if we want it to be explict everyt time. Implicit is the default
-        if not (self.total_ir_val_prev == self.total_ir_val) or self.explict_ir:
-            await FallingEdge(self.bus.tck)
-            self.bus.tms.value = 1  # Select IR
-            await FallingEdge(self.bus.tck)
-            self.bus.tdi.value = 0  # ?
-            self.bus.tms.value = 0  # Capture IR
-            await FallingEdge(self.bus.tck)
-
-            # print(f"{self.total_ir_len} 0x{self.total_ir_val:04x}")
-            for i in range(self.total_ir_len2):
-                await FallingEdge(self.bus.tck)
-
-                # self.log.info(f"{i} - {(self.total_ir_val >> i) & 0x1}")
-                self.bus.tdi.value = (self.total_ir_val >> i) & 0x1  # Shift IR
-
-            self.bus.tms.value = 1
-            await FallingEdge(self.bus.tck)  # Exit1 IR
-            await FallingEdge(self.bus.tck)  # Update IR
-
-        await FallingEdge(self.bus.tck)  # Select DR
-        self.bus.tms.value = 0
-        await FallingEdge(self.bus.tck)  # Capture DR
-        if not self.write:
-            self.bus.tdi.value = 0
+#         self.log.info(f"ir_val 0x{self.total_ir_val:x} ir_len {self.total_ir_len} dr_val 0x{self.total_dr_val:x} ir_len {self.total_dr_len}")
         
-        dr_shift_len = self.dr_len + len(self.devices) - 1
-        if 0 == randint(0, 3) and self.random_pause:
-            rand_pause = randint(1, dr_shift_len-1)
-            rand_length = randint(0, 5)+2
-            print(rand_pause, rand_length, dr_shift_len)
-        else:
-            rand_pause = 2*dr_shift_len
-            rand_length = 0
-        dr_shift_len += rand_length
-        device_chain = len(self.devices) - 1 - self.device
-        while not 0 == dr_shift_len:
-            if rand_pause == dr_shift_len:
-                self.bus.tms.value = 1 #EXIT1-DR
-            elif (rand_pause+rand_length) == dr_shift_len:
-                self.bus.tms.value = 1 #EXIT2-DR
-            else:
-                self.bus.tms.value = 0
-            await FallingEdge(self.bus.tck)
-            
-            if self.write:
-                if device_chain == 0: 
-                    self.bus.tdi.value = self.dr_val & 0x1  # Shift DR
-                    self.dr_val = self.dr_val >> 1
-                else:
-                    self.bus.tdi.value = True  # Shift DR
-                    device_chain -= 1
-#             else:
-#                 self.bus.tdi.value = True  # Shift DR
-            dr_shift_len -= 1
+        self.tx_fsm.ir_val=self.total_ir_val
+        self.tx_fsm.ir_len=self.total_ir_len
+        self.tx_fsm.dr_val=self.total_dr_val
+        self.tx_fsm.dr_len=self.total_dr_len
+        self.tx_fsm.write=self.write
+        self.tx_fsm.explict_ir = self.explict_ir
+        self.tx_fsm.start = True
+        self.clock_gated = True
         
-        self.bus.tms.value = 1
-        if rand_pause > 1:
-            await FallingEdge(self.bus.tck)  # Exit1 DR
-        await FallingEdge(self.bus.tck)  # Update DR
-        self.bus.tms.value = 0
+        if 'TEST_LOGIC_RESET' == self.tx_fsm.state and not self.bus.tms.value:
+            self.bus.tms.value = True
+            await FallingEdge(self.bus.tck)
+        
+        self.dr_val_out = 0
+        index = 0
+        while not self.tx_fsm.finished:
+            self.log.debug(f"{self.tx_fsm.state}")
+            self.tx_fsm.update_state(self.bus)
+#             await RisingEdge(self.bus.tck)
+            await FallingEdge(self.bus.tck)
+#             if 'SHIFT_DR' == self.tx_fsm.state:
+#                 self.dr_val_out = self.dr_val_out + (int(self.bus.tdo) << index)
+# #                 print(index)
+#                 print(f"{index} 0x{self.dr_val_out:08x}")
+#                 index += 1
+#             if 'UPDATE_DR' == self.tx_fsm.state:
+#                 print(f"0x{self.dr_val_out:08x}")
+        self.log.debug(f"{self.tx_fsm.state}")
+        self.tx_fsm.update_state(self.bus)
         await FallingEdge(self.bus.tck)
-        await RisingEdge(self.bus.tck)
-        #         self.ir_val_prev = self.ir_val
-        self.device_prev = self.device
-        self.total_ir_val_prev = self.total_ir_val
+
         self.clock_gated = False
 
     async def write_val(self, val, addr=None, device=0):

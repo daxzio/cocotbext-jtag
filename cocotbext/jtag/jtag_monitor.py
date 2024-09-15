@@ -24,7 +24,7 @@ class JTAGMonitor(CocoTBExtLogger):
 
         self.bus = bus
         
-        start_soon(self._detect_reset())
+#         start_soon(self._detect_reset())
         start_soon(self._jtag_fsm())
 
     async def _detect_reset(self):

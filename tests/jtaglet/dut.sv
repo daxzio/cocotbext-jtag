@@ -1,8 +1,8 @@
 module dut #(
       parameter integer IR_LEN       = 4
-    , parameter integer ID_PARTVER   = 4'h1
-    , parameter integer ID_PARTNUM   = 16'hBEEF
-    , parameter integer ID_MANF      = 11'h035
+    , parameter ID_PARTVER   = 4'h1
+    , parameter ID_PARTNUM   = 16'hbeef
+    , parameter ID_MANF      = 11'h035
     , parameter integer USERDATA_LEN = 32
     , parameter integer USEROP_LEN   = 8
 ) (
@@ -31,8 +31,8 @@ module dut #(
         , .userOp_ready(userOp_ready)
     );
 
-    //`ifdef COCOTB_SIM
-`ifdef COCOTB_ICARUS
+    `ifdef COCOTB_SIM
+//`ifdef COCOTB_ICARUS
     initial begin
         $dumpfile("dut.vcd");
         $dumpvars(0, dut);

@@ -17,14 +17,4 @@ INT_VERILOG_SOURCES += \
 COCOTB_SOURCES = \
     ./dut.sv
 
-# VERILOG_DESIGN += \
-#     ${INT_VERILOG_SOURCES} \
-#     ${SIM_VERILOG_SOURCES} \
-#     ${EXT_VERILOG_SOURCES} \
-#     ${XILINX_SIM_SOURCES}
-# 
-# VERILOG_SOURCES = \
-#     ${VERILOG_DESIGN} \
-#     ${COCOTB_SOURCES}
-
 include ${PROJ_HOME}/rtlflo/cocotb_helper.mak
