@@ -27,15 +27,17 @@
 
 """A gated clock class."""
 
-import itertools
-import logging
 from decimal import Decimal
 from fractions import Fraction
-from logging import Logger
-from typing import Optional, Union
+from typing import Union
 
 from cocotb.clock import Clock
-from cocotb.triggers import Timer
+from cocotb.triggers import Event, Timer
+
+try:
+    from cocotb.simulator import clock_create
+except ImportError:
+    pass
 
 
 class GatedClock(Clock):
@@ -116,10 +118,21 @@ class GatedClock(Clock):
         gated: bool = True,
     ):
 
-        try: # this is new on 2.0.0
-            Clock.__init__(self, signal, period, units, impl,)
+        try:  # this is new on 2.0.0
+            Clock.__init__(
+                self,
+                signal,
+                period,
+                units,
+                impl,
+            )
         except TypeError:
-            Clock.__init__(self, signal, period, units,)
+            Clock.__init__(
+                self,
+                signal,
+                period,
+                units,
+            )
             self.impl = impl
         self.gated = gated
 

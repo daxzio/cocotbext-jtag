@@ -29,9 +29,10 @@ from .jtag_monitor import JTAGMonitor
 from .jtag_bus import JTAGBus
 from .jtag_device import JTAGDevice
 
-# from .jtag_driver import EnJTAGDevice
-# from .jtag_driver import M3JTAGDevice
-# from .jtag_driver import H3JTAGDevice
-
-# from .jtag_sink import JTAGSink
-from .clkreset import Reset
+__all__ = [
+    "__version__",
+    "JTAGDriver",
+    "JTAGMonitor",
+    "JTAGBus",
+    "JTAGDevice",
+]

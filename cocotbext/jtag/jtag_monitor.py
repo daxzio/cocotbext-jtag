@@ -6,6 +6,7 @@ from .version import __version__
 from .cocotbext_logger import CocoTBExtLogger
 from .jtag_sm import JTAGRxSm
 
+
 class JTAGMonitor(CocoTBExtLogger):
     def __init__(
         self,
@@ -16,15 +17,15 @@ class JTAGMonitor(CocoTBExtLogger):
             self, type(self).__name__, logging_enabled, start_year=2024
         )
 
-#         self.log.setLevel(logging.INFO)
+        self.log.setLevel(logging.INFO)
         self.log.info("JTAG Monitor")
         self.log.info(f"cocotbext-jtag version {__version__}")
         self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
 
         self.bus = bus
-        
-#         start_soon(self._detect_reset())
+
+        #         start_soon(self._detect_reset())
         start_soon(self._jtag_fsm())
 
     async def _detect_reset(self):
@@ -32,7 +33,7 @@ class JTAGMonitor(CocoTBExtLogger):
         while True:
             await RisingEdge(self.bus.tck)
             if 1 == self.bus.tms.value:
-                count +=1
+                count += 1
                 if 5 == count:
                     self.log.info("Test logic Reset Detected")
             else:

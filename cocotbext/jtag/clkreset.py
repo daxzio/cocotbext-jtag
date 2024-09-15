@@ -25,13 +25,14 @@ THE SOFTWARE.
 from cocotb.clock import Clock
 from cocotb import start_soon
 from cocotb.triggers import RisingEdge, Timer
-from cocotb.handle import ModifiableObject
+
+# from cocotb.handle import ModifiableObject
 
 
 class Clk:
     def __init__(self, dut, period=10, units="ns", clkname="clk"):
-#         print(clkname)
-#         self.clk = getattr(dut, clkname)
+        #         print(clkname)
+        #         self.clk = getattr(dut, clkname)
         try:
             self.clk = getattr(dut, clkname)
         except AttributeError:
@@ -46,7 +47,15 @@ class Clk:
 
 
 class Reset:
-    def __init__(self, dut, clk=None, reset_length=100, reset_sense=1, resetname="reset", units="ns"):
+    def __init__(
+        self,
+        dut,
+        clk=None,
+        reset_length=100,
+        reset_sense=1,
+        resetname="reset",
+        units="ns",
+    ):
 
         try:
             self.reset = getattr(dut, resetname)
@@ -65,12 +74,12 @@ class Reset:
     async def set_reset(self, reset_length=None):
         if reset_length is None:
             reset_length = self.reset_length
-        
+
         await Timer(reset_length, units=self.units)
         self.reset.value = self.reset_sense
         self.finished = False
         await Timer(reset_length, units=self.units)
-        self.reset.value = not(self.reset_sense)
+        self.reset.value = not (self.reset_sense)
         self.finished = True
 
     async def reset_finished(self):
