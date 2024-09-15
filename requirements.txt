@@ -1,2 +1,4 @@
 cocotb
 cocotb-bus
+pytest
+pyflakes
