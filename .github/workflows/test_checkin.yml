@@ -22,15 +22,15 @@ jobs:
         run: |
           pyflakes myhdl
  
-  build_ghdl_linux:
-    #uses: daxzio/setup-eda/.github/workflows/setup_ghdl.yml@main
-    uses: ./.github/workflows/setup_ghdl.yml
+#   build_ghdl_linux:
+#     #uses: daxzio/setup-eda/.github/workflows/setup_ghdl.yml@main
+#     uses: ./.github/workflows/setup_ghdl.yml
   build_iverilog_linux:
     #uses: daxzio/setup-eda/.github/workflows/setup_iverilog.yml@main
     uses: ./.github/workflows/setup_iverilog.yml
-  build_verilator_linux:
-    #uses: daxzio/setup-eda/.github/workflows/setup_verilator.yml@main
-    uses: ./.github/workflows/setup_verilator.yml
+#   build_verilator_linux:
+#     #uses: daxzio/setup-eda/.github/workflows/setup_verilator.yml@main
+#     uses: ./.github/workflows/setup_verilator.yml
 
   build_code_linux:
 
@@ -77,6 +77,10 @@ jobs:
 #           echo "${{ needs.build_ghdl_linux.outputs.cache_dir }}/bin" >> $GITHUB_PATH
       - uses: veryl-lang/setup-verilator@v1
       - run: verilator --version
+      - uses: ghdl/setup-ghdl-ci@nightly
+        with:
+          backend: llvm
+      - run: ghdl --version      
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
