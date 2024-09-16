@@ -99,6 +99,9 @@ jobs:
 #       - name: Run Tests
 #         run: |
 #           make ${CI_TARGET}
+      - name: Run Tests
+        run: |
+          make
   
 #   build_code_windows:
 # 
