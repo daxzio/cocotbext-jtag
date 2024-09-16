@@ -94,6 +94,7 @@ jobs:
           python -m pip install .
       - name: Run Tests
         run: |
+          unset PYTHONHOME 
           make SIM=${CI_TARGET}
     
   pypy_release:
