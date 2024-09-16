@@ -44,8 +44,7 @@ jobs:
 #         target: [icarus]
     runs-on: ubuntu-latest
 #     needs: [run_lint, build_ghdl_linux, build_icarus_linux, build_verilator_linux]
-#     needs: [run_lint, build_icarus_linux, build_verilator_linux]
-    needs: [run_lint, build_icarus_linux]
+    needs: [run_lint, build_icarus_linux, build_verilator_linux]
 
     env:
       CI_TARGET: ${{ matrix.target }}
