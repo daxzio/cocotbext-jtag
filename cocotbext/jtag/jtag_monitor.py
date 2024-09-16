@@ -50,7 +50,9 @@ class JTAGMonitor(CocoTBExtLogger):
             elif "SHIFT_DR" == self.fsm.state:
                 self.log.debug(f"{self.fsm.state} {self.fsm.dr_cnt}")
             elif "UPDATE_DR" == self.fsm.state:
-                self.log.debug(f"{self.fsm.state} tdi 0x{self.fsm.dr_val_in:x} tdo 0x{self.fsm.dr_val_out:x}")
+                self.log.debug(
+                    f"{self.fsm.state} tdi 0x{self.fsm.dr_val_in:x} tdo 0x{self.fsm.dr_val_out:x}"
+                )
             else:
                 self.log.debug(f"{self.fsm.state}")
             self.fsm.update_state(self.bus)

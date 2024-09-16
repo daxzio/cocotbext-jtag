@@ -85,17 +85,12 @@ class JTAGDriver(CocoTBExtLogger):
         self.explict_ir = False
         self.suppress_log = False
         self.random_pause = False
-        #         self.device_prev = None
-        #         self.total_ir_val_prev = None
 
         self.devices = []
         self.device = 0
 
         start_soon(self._jtag_fsm())
         start_soon(self._parse_tdo())
-
-    #     async def wait_clkn(self, length=1):
-    #         await self.clk.wait_clkn(length)
 
     async def wait_clkn(self, length=1):
         for i in range(int(length)):
@@ -144,10 +139,10 @@ class JTAGDriver(CocoTBExtLogger):
         while True:
             await RisingEdge(self.bus.tck)
             if "UPDATE_DR" == self.rx_fsm.state:
-                #                 print(f"0x{self.rx_fsm.dr_val_out:08x} {self.device}")
-                self.ret_val = (self.rx_fsm.dr_val_out >> (
-                    len(self.devices) - 1 - self.device
-                ))  & 0xffffffff
+                mask = (2**self.dr_len) - 1
+                self.ret_val = (
+                    self.rx_fsm.dr_val_out >> (len(self.devices) - 1 - self.device)
+                ) & mask
                 if not self.dr_val is None:
                     if not self.ret_val == self.dr_val and not self.write:
                         raise Exception(
