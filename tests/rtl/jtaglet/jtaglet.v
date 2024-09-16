@@ -20,12 +20,12 @@
  */
 
 module jtaglet #(
-    parameter integer IR_LEN       = 4
-    ,parameter [3:0] ID_PARTVER   = 4'h0
-    ,parameter [15:0] ID_PARTNUM   = 16'h0000
-    ,parameter [10:0] ID_MANF      = 11'h000
-    ,parameter integer USERDATA_LEN = 32
-    ,parameter integer USEROP_LEN   = 8
+    parameter IR_LEN       = 4,
+    parameter ID_PARTVER   = 4'h0,
+    parameter ID_PARTNUM   = 16'h0000,
+    parameter ID_MANF      = 11'h000,
+    parameter USERDATA_LEN = 32,
+    parameter USEROP_LEN   = 8
 ) (
     input      tck,
     input      tms,
@@ -39,14 +39,14 @@ module jtaglet #(
     output                    userOp_ready
 );
 
-    localparam integer USERDATA_OP = 4'b1000;
-    localparam integer USEROP_OP = 4'b1001;
-    localparam integer IDCODE_OP = {{(IR_LEN - 1) {1'b1}}, 1'b0};  //e.g. b1110
-    localparam integer BYPASS_OP = {IR_LEN{1'b1}};  // e.g. b1111 (required bit pattern per spec)
+    localparam USERDATA_OP = 4'b1000;
+    localparam USEROP_OP = 4'b1001;
+    localparam IDCODE_OP = {{(IR_LEN - 1) {1'b1}}, 1'b0};  //e.g. b1110
+    localparam BYPASS_OP = {IR_LEN{1'b1}};  // e.g. b1111 (required bit pattern per spec)
 
-    localparam [31:0] idcode = {ID_PARTVER, ID_PARTNUM, ID_MANF, 1'b1};
+    wire [31:0] idcode = {ID_PARTVER, ID_PARTNUM, ID_MANF, 1'b1};
 
-    logic state_tlr, state_capturedr, state_captureir, state_shiftdr, state_shiftir, state_updatedr, state_updateir;
+    wire state_tlr, state_capturedr, state_captureir, state_shiftdr, state_shiftir, state_updatedr, state_updateir;
 
     jtag_state_machine jsm (
         .tck            (tck),
@@ -61,10 +61,10 @@ module jtaglet #(
         .state_updateir (state_updateir)
     );
 
-    logic  [IR_LEN-1:0] ir_reg;
+    reg  [IR_LEN-1:0] ir_reg;
 
     //USERDATA - DR becomes a USERDATA_LEN bit user data register passed out of the module
-    logic              userData_tdo;
+    wire              userData_tdo;
     jtag_reg #(
         .IR_LEN   (IR_LEN),
         .DR_LEN   (USERDATA_LEN),
@@ -85,7 +85,7 @@ module jtaglet #(
     );
 
     //USEROPCODE - DR becomes an 8 bit operation select/initiate register passed out of the module
-    logic userOp_tdo;
+    wire userOp_tdo;
     jtag_reg #(
         .IR_LEN   (IR_LEN),
         .DR_LEN   (USEROP_LEN),
@@ -106,7 +106,7 @@ module jtaglet #(
     );
 
     //IDCODE - DR is pre-loaded with the 32 bit identification code of this part
-    logic idcode_tdo;
+    wire idcode_tdo;
     jtag_reg #(
         .IR_LEN   (IR_LEN),
         .DR_LEN   (32),
@@ -127,7 +127,7 @@ module jtaglet #(
     );
 
     //BYPASS - DR becomes a 1 bit wide register, suitable for bypassing this part
-    logic bypass_tdo;
+    wire bypass_tdo;
     jtag_reg #(
         .IR_LEN   (IR_LEN),
         .DR_LEN   (1),
@@ -148,7 +148,7 @@ module jtaglet #(
     );
 
     //Instruction Register
-    logic ir_tdo;
+    wire ir_tdo;
     assign ir_tdo = ir_reg[0];
     always @(posedge tck or negedge trst) begin
         if (~trst) begin
@@ -164,7 +164,7 @@ module jtaglet #(
     end
 
     //IR selects the appropriate DR
-    logic tdo_pre;
+    reg tdo_pre;
     always @(*) begin
         tdo_pre = 0;
         if (state_shiftdr) begin

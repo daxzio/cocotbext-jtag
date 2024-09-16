@@ -20,9 +20,9 @@
  */
 
 module jtag_reg #(
-    parameter integer IR_LEN    = 4,
-    parameter integer DR_LEN    = 1,
-    parameter integer IR_OPCODE = 4'b0
+    parameter IR_LEN    = 4,
+    parameter DR_LEN    = 1,
+    parameter IR_OPCODE = 4'b0
 ) (
     input                   tck,
     input                   trst,
@@ -55,7 +55,8 @@ module jtag_reg #(
                 else if (state_shiftdr) begin
                     if (DR_LEN == 1) dr_reg <= tdi;
                     /* verilator lint_off SELRANGE */
-                    else dr_reg <= {tdi, dr_reg[DR_LEN-1:1]};
+                    else
+                        dr_reg <= {tdi, dr_reg[DR_LEN-1:1]};
                     /* verilator lint_on SELRANGE */
                 end else if (state_updatedr) begin
                     dr_dataOut      <= dr_reg;
