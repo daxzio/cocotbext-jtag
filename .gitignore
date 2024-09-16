@@ -11,4 +11,5 @@ results.xml
 *.vcd
 *.vcd.hier
 *.fst
+dist/
 m3-dapswjdp/

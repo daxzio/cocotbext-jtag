@@ -9,3 +9,8 @@ lint:
 
 format:
 	black cocotbext
+
+dist:
+	rm -rf MANIFEST 
+	rm -rf CHANGELOG.txt
+	python setup.py sdist
