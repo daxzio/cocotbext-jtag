@@ -29,7 +29,7 @@ jobs:
           echo "GITHEAD=${{ inputs.githash }}" >> $GITHUB_ENV
       - name: Setup Icarus 
         run: |
-          export GITPATH=https://github.com/steveicarus/icarus.git
+          export GITPATH=https://github.com/steveicarus/iverilog.git
           if [ -z ${GITHEAD+x} ]; then
             export GITHEAD=`git ls-remote $GITPATH HEAD | head -1 | awk '{print $1}'`
             echo "GITHEAD=${GITHEAD}" >> $GITHUB_ENV
@@ -47,7 +47,7 @@ jobs:
         name: Compile Icarus 
         run: |
           mkdir -p ${{ env.CACHE_DIR }}
-          git clone ${{ env.GITPATH }}
+          git clone ${{ env.GITPATH }} icarus
           cd icarus
           git checkout ${{ env.GITHEAD }}
           sudo apt install -y build-essential gperf flex bison
