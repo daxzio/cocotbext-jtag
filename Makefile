@@ -1,3 +1,5 @@
+SIM?=icarus
+
 default:
 	cd tests/test001 ; make clean sim
 	cd tests/test002 ; make clean sim
