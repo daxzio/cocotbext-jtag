@@ -45,8 +45,12 @@ class JTAGMonitor(CocoTBExtLogger):
             await RisingEdge(self.bus.tck)
             if "SHIFT_IR" == self.fsm.state:
                 self.log.debug(f"{self.fsm.state} {self.fsm.ir_cnt}")
+            elif "UPDATE_IR" == self.fsm.state:
+                self.log.debug(f"{self.fsm.state} 0x{self.fsm.ir_val_in:x}")
             elif "SHIFT_DR" == self.fsm.state:
                 self.log.debug(f"{self.fsm.state} {self.fsm.dr_cnt}")
+            elif "UPDATE_DR" == self.fsm.state:
+                self.log.debug(f"{self.fsm.state} tdi 0x{self.fsm.dr_val_in:x} tdo 0x{self.fsm.dr_val_out:x}")
             else:
                 self.log.debug(f"{self.fsm.state}")
             self.fsm.update_state(self.bus)

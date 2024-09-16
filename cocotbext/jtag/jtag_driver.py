@@ -145,9 +145,9 @@ class JTAGDriver(CocoTBExtLogger):
             await RisingEdge(self.bus.tck)
             if "UPDATE_DR" == self.rx_fsm.state:
                 #                 print(f"0x{self.rx_fsm.dr_val_out:08x} {self.device}")
-                self.ret_val = self.rx_fsm.dr_val_out >> (
+                self.ret_val = (self.rx_fsm.dr_val_out >> (
                     len(self.devices) - 1 - self.device
-                )
+                ))  & 0xffffffff
                 if not self.dr_val is None:
                     if not self.ret_val == self.dr_val and not self.write:
                         raise Exception(
