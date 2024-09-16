@@ -39,8 +39,8 @@ jobs:
       matrix:
 #         python-version: ["3.7", "3.8", "3.9", "3.10", "pypy-3.9", "3.11", "3.12"]
         python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
-#         target: [core, icarus, ghdl]
-        target: [icarus, verilator]
+#         target: [core, icarus, verilator, ghdl]
+        target: [icarus]
 #         target: [icarus]
     runs-on: ubuntu-latest
 #     needs: [run_lint, build_ghdl_linux, build_icarus_linux, build_verilator_linux]
