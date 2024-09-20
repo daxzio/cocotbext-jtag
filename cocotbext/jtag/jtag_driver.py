@@ -61,8 +61,8 @@ class JTAGDriver(CocoTBExtLogger):
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
 
         self.bus = bus
-        self.tx_fsm = JTAGTxSm()
-        self.rx_fsm = JTAGRxSm()
+        self.tx_fsm = JTAGTxSm(self.bus)
+        self.rx_fsm = JTAGRxSm(self.bus)
 
         # start_soon(Clock(self.bus.tck, self.period, units=units).start())
         self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False)
@@ -123,6 +123,7 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def set_reset(self, num=10):
         if hasattr(self, "reset"):
+            self.log.debug("JTAG Resetting")
             self.tx_fsm.reset_state()
             self.rx_fsm.reset_state()
             await self.reset.set_reset(num)
@@ -133,7 +134,7 @@ class JTAGDriver(CocoTBExtLogger):
         while True:
             await RisingEdge(self.bus.tck)
             self.log.debug(self.rx_fsm.state)
-            self.rx_fsm.update_state(self.bus)
+            self.rx_fsm.update_state()
 
     async def _parse_tdo(self):
         while True:
@@ -220,7 +221,7 @@ class JTAGDriver(CocoTBExtLogger):
         #         index = 0
         while not self.tx_fsm.finished:
             self.log.debug(f"{self.tx_fsm.state}")
-            self.tx_fsm.update_state(self.bus)
+            self.tx_fsm.update_state()
             #             await RisingEdge(self.bus.tck)
             await FallingEdge(self.bus.tck)
         #             if 'SHIFT_DR' == self.tx_fsm.state:
@@ -231,7 +232,7 @@ class JTAGDriver(CocoTBExtLogger):
         #             if 'UPDATE_DR' == self.tx_fsm.state:
         #                 print(f"0x{self.dr_val_out:08x}")
         self.log.debug(f"{self.tx_fsm.state}")
-        self.tx_fsm.update_state(self.bus)
+        self.tx_fsm.update_state()
         await FallingEdge(self.bus.tck)
 
         self.clock_gated = False

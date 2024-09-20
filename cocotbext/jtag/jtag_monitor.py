@@ -1,5 +1,5 @@
 import logging
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb import start_soon
 
 from .version import __version__
@@ -27,6 +27,14 @@ class JTAGMonitor(CocoTBExtLogger):
 
         #         start_soon(self._detect_reset())
         start_soon(self._jtag_fsm())
+        start_soon(self._reset())
+
+    async def _reset(self):
+        while True:
+            await FallingEdge(self.bus.trst)
+            self.log.info("TRST Reset Detected")
+            self.fsm.state = "TEST_LOGIC_RESET"
+            await RisingEdge(self.bus.trst)
 
     async def _detect_reset(self):
         count = 0
@@ -40,7 +48,7 @@ class JTAGMonitor(CocoTBExtLogger):
                 count = 0
 
     async def _jtag_fsm(self):
-        self.fsm = JTAGRxSm()
+        self.fsm = JTAGRxSm(self.bus)
         while True:
             await RisingEdge(self.bus.tck)
             if "SHIFT_IR" == self.fsm.state:
@@ -55,4 +63,4 @@ class JTAGMonitor(CocoTBExtLogger):
                 )
             else:
                 self.log.debug(f"{self.fsm.state}")
-            self.fsm.update_state(self.bus)
+            self.fsm.update_state()

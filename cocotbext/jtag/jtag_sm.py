@@ -22,31 +22,30 @@ THE SOFTWARE.
 
 """
 
-from enum import Enum
-
-
-class JTAGState(Enum):
-    TEST_LOGIC_RESET = 0x0
-    RUN_TEST_IDLE = 0x1
-    SELECT_DR = 0x2
-    CAPTURE_DR = 0x3
-    SHIFT_DR = 0x4
-    EXIT1_DR = 0x5
-    PAUSE_DR = 0x6
-    EXIT2_DR = 0x7
-    UPDATE_DR = 0x8
-    SELECT_IR = 0x9
-    CAPTURE_IR = 0xA
-    SHIFT_IR = 0xB
-    EXIT1_IR = 0xC
-    PAUSE_IR = 0xD
-    EXIT2_IR = 0xE
-    UPDATE_IR = 0xF
+# from enum import Enum
+# class JTAGState(Enum):
+#     TEST_LOGIC_RESET = 0x0
+#     RUN_TEST_IDLE = 0x1
+#     SELECT_DR = 0x2
+#     CAPTURE_DR = 0x3
+#     SHIFT_DR = 0x4
+#     EXIT1_DR = 0x5
+#     PAUSE_DR = 0x6
+#     EXIT2_DR = 0x7
+#     UPDATE_DR = 0x8
+#     SELECT_IR = 0x9
+#     CAPTURE_IR = 0xA
+#     SHIFT_IR = 0xB
+#     EXIT1_IR = 0xC
+#     PAUSE_IR = 0xD
+#     EXIT2_IR = 0xE
+#     UPDATE_IR = 0xF
 
 
 class JTAGTxSm:
-    def __init__(self):
+    def __init__(self, bus):
         self.reset_state()
+        self.bus = bus
 
     def reset_state(self):
         self.state = "TEST_LOGIC_RESET"
@@ -60,58 +59,53 @@ class JTAGTxSm:
         self.explict_ir = False
         self.start = False
 
-    def update_state(self, bus):
+    def update_state(self):
 
-        #         print("x", self.state)
         if self.state == "TEST_LOGIC_RESET":
-            #             self.finished = None
             self.finished = False
-            bus.tms.value = True
+            self.bus.tms.value = True
             if self.start:
                 self.state = "RUN_TEST_IDLE"
-                bus.tms.value = False
-        #                 print(self.explict_ir, self.ir_val, self.ir_val_prev)
-        #                 if not self.explict_ir and (self.ir_val == self.ir_val_prev):
-        #                     self.ir_len = 0
+                self.bus.tms.value = False
         elif self.state == "RUN_TEST_IDLE":
             self.finished = False
             # print(self.explict_ir, self.ir_val, self.ir_val_prev)
             if not self.explict_ir and (self.ir_val == self.ir_val_prev):
                 self.ir_len = 0
             self.state = "SELECT_DR"
-            bus.tms.value = True
+            self.bus.tms.value = True
             self.start = False
             #             if start_tx:
             #                 self.state = "SELECT_DR"
-            #                 bus.tms.value = True
+            #                 self.bus.tms.value = True
             #             else:
-            #                 bus.tms.value = False
-            bus.tdi.value = False
+            #                 self.bus.tms.value = False
+            self.bus.tdi.value = False
         elif self.state == "SELECT_DR":
             #             print(self.ir_len)
             if self.dr_len <= 0 or self.ir_len > 0:
                 self.state = "SELECT_IR"
-                bus.tms.value = True
+                self.bus.tms.value = True
             else:
                 self.state = "CAPTURE_DR"
-                bus.tms.value = False
+                self.bus.tms.value = False
         elif self.state == "CAPTURE_DR":
             self.state = "SHIFT_DR"
-            bus.tms.value = False
+            self.bus.tms.value = False
         elif self.state == "SHIFT_DR":
             if self.write:
-                bus.tdi.value = self.dr_val & 0x1
+                self.bus.tdi.value = self.dr_val & 0x1
             else:
-                bus.tdi.value = False
+                self.bus.tdi.value = False
             self.dr_val = self.dr_val >> 1
             self.dr_len -= 1
-            bus.tms.value = False
+            self.bus.tms.value = False
             if self.dr_len <= 0:
                 self.state = "EXIT1_DR"
-                bus.tms.value = True
+                self.bus.tms.value = True
         elif self.state == "EXIT1_DR":
             self.state = "UPDATE_DR"
-            bus.tms.value = True
+            self.bus.tms.value = True
         elif self.state == "PAUSE_DR":
             pass
         elif self.state == "EXIT2_DR":
@@ -120,35 +114,35 @@ class JTAGTxSm:
             #             self.finished = True
             if self.dr_len <= 0 and self.ir_len <= 0:
                 self.state = "RUN_TEST_IDLE"
-                bus.tms.value = False
+                self.bus.tms.value = False
                 self.finished = True
             else:
                 self.state = "SELECT_DR"
-                bus.tms.value = True
+                self.bus.tms.value = True
         elif self.state == "SELECT_IR":
             #             print(self.dr_len, self.ir_len)
             if self.dr_len <= 0 and self.ir_len <= 0:
                 self.state = "TEST_LOGIC_RESET"
-                bus.tms.value = True
+                self.bus.tms.value = True
             #                 self.finished = True
             else:
                 self.state = "CAPTURE_IR"
-                bus.tms.value = False
+                self.bus.tms.value = False
         elif self.state == "CAPTURE_IR":
             self.state = "SHIFT_IR"
-            bus.tms.value = False
+            self.bus.tms.value = False
             self.ir_val_prev = self.ir_val
         #             exit()
         elif self.state == "SHIFT_IR":
-            bus.tdi.value = self.ir_val & 0x1
+            self.bus.tdi.value = self.ir_val & 0x1
             self.ir_val = self.ir_val >> 1
             self.ir_len -= 1
             if self.ir_len <= 0:
-                bus.tms.value = True
+                self.bus.tms.value = True
                 self.state = "EXIT1_IR"
         elif self.state == "EXIT1_IR":
             self.state = "UPDATE_IR"
-            bus.tms.value = True
+            self.bus.tms.value = True
         elif self.state == "PAUSE_IR":
             self.state = "SHIFT_IR"
         elif self.state == "EXIT2_IR":
@@ -157,15 +151,16 @@ class JTAGTxSm:
             if self.dr_len <= 0 and self.ir_len <= 0:
                 self.state = "RUN_TEST_IDLE"
                 self.finished = True
-                bus.tms.value = False
+                self.bus.tms.value = False
             else:
                 self.state = "SELECT_DR"
-                bus.tms.value = True
+                self.bus.tms.value = True
 
 
 class JTAGRxSm:
-    def __init__(self):
+    def __init__(self, bus):
         self.reset_state()
+        self.bus = bus
 
     def reset_state(self):
         self.state = "TEST_LOGIC_RESET"
@@ -175,7 +170,7 @@ class JTAGRxSm:
         self.ir_cnt = 0
         self.ir_val_in = 0
 
-    def update_state(self, bus):
+    def update_state(self):
 
         if self.state == "TEST_LOGIC_RESET" or self.state == "RUN_TEST_IDLE":
             self.dr_cnt = 0
@@ -188,8 +183,8 @@ class JTAGRxSm:
             self.dr_val_in = 0
             self.dr_val_out = 0
         elif self.state == "SHIFT_DR":
-            self.dr_val_in += int(bus.tdi.value) << self.dr_cnt
-            self.dr_val_out += int(bus.tdo.value) << self.dr_cnt
+            self.dr_val_in += int(self.bus.tdi.value) << self.dr_cnt
+            self.dr_val_out += int(self.bus.tdo.value) << self.dr_cnt
             self.dr_cnt += 1
         elif self.state == "UPDATE_DR":
             pass
@@ -198,87 +193,87 @@ class JTAGRxSm:
             self.ir_cnt = 0
             self.ir_val_in = 0
         elif self.state == "SHIFT_IR":
-            self.ir_val_in += int(bus.tdi.value) << self.ir_cnt
+            self.ir_val_in += int(self.bus.tdi.value) << self.ir_cnt
             self.ir_cnt += 1
         elif self.state == "UPDATE_IR":
             pass
         #             print(f"ir_cnt {self.ir_cnt} 0x{self.ir_val_in:08x}")
 
         if self.state == "TEST_LOGIC_RESET":
-            if not bus.tms.value:
+            if not self.bus.tms.value:
                 self.state = "RUN_TEST_IDLE"
         elif self.state == "RUN_TEST_IDLE":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "SELECT_DR"
             else:
                 self.state = "RUN_TEST_IDLE"
         elif self.state == "SELECT_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "SELECT_IR"
             else:
                 self.state = "CAPTURE_DR"
         elif self.state == "CAPTURE_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "EXIT1_DR"
             else:
                 self.state = "SHIFT_DR"
         elif self.state == "SHIFT_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "EXIT1_DR"
             else:
                 self.state = "SHIFT_DR"
         elif self.state == "EXIT1_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "UPDATE_DR"
             else:
                 self.state = "PAUSE_DR"
         elif self.state == "PAUSE_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "EXIT2_DR"
             else:
                 self.state = "PAUSE_DR"
         elif self.state == "EXIT2_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "UPDATE_DR"
             else:
                 self.state = "SHIFT_DR"
         elif self.state == "UPDATE_DR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "SELECT_DR"
             else:
                 self.state = "RUN_TEST_IDLE"
         elif self.state == "SELECT_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "TEST_LOGIC_RESET"
             else:
                 self.state = "CAPTURE_IR"
         elif self.state == "CAPTURE_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "EXIT1_IR"
             else:
                 self.state = "SHIFT_IR"
         elif self.state == "SHIFT_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "EXIT1_IR"
             else:
                 self.state = "SHIFT_IR"
         elif self.state == "EXIT1_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "UPDATE_IR"
             else:
                 self.state = "PAUSE_IR"
         elif self.state == "PAUSE_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "EXIT2_IR"
             else:
                 self.state = "PAUSE_IR"
         elif self.state == "EXIT2_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "UPDATE_IR"
             else:
                 self.state = "SHIFT_IR"
         elif self.state == "UPDATE_IR":
-            if bus.tms.value:
+            if self.bus.tms.value:
                 self.state = "SELECT_DR"
             else:
                 self.state = "RUN_TEST_IDLE"
