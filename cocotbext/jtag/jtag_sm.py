@@ -66,25 +66,27 @@ class JTAGTxSm:
         self.finished = False
         self.explict_ir = False
         self.start = False
-    
+
     def gen_ir_random(self, random=False):
         self.ir_pause = 0
         self.ir_delay = 0
         if random:
             if 0 == randint(0, 4):
-                self.ir_pause = randint(0, self.ir_len)+1
-                self.ir_delay = randint(0, 4)+1
-#                 print("ir", self.ir_pause, self.ir_delay)
+                self.ir_pause = randint(0, self.ir_len) + 1
+                self.ir_delay = randint(0, 4) + 1
+
+    #                 print("ir", self.ir_pause, self.ir_delay)
 
     def gen_dr_random(self, random=False):
         self.dr_pause = 0
         self.dr_delay = 0
         if random:
             if 0 == randint(0, 4):
-                self.dr_pause = randint(0, self.dr_len)+1
-                self.dr_delay = randint(0, 7)+1
-#                 print("dr", self.dr_pause, self.dr_delay)
-    
+                self.dr_pause = randint(0, self.dr_len) + 1
+                self.dr_delay = randint(0, 7) + 1
+
+    #                 print("dr", self.dr_pause, self.dr_delay)
+
     def update_state(self):
 
         if self.state == "TEST_LOGIC_RESET":
@@ -217,8 +219,9 @@ class JTAGRxSm:
     def __init__(self, bus):
         self.reset_state()
         self.bus = bus
-#         self.seed = iseed
-#         seed(self.seed)
+
+    #         self.seed = iseed
+    #         seed(self.seed)
 
     def reset_state(self):
         self.state = "TEST_LOGIC_RESET"

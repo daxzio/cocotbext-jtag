@@ -10,7 +10,6 @@ from cocotbext.jtag import JTAGDriver
 from cocotbext.jtag import JTAGMonitor
 from cocotbext.jtag import JTAGDevice
 from cocotbext.jtag import JTAGBus
-# from cocotbext.jtag.gatedclock import GatedClock
 
 class J1JTAGDevice(JTAGDevice):
     def __init__(self, name='jtaglet1', idcode=0x53817905, ir_len=5):
@@ -24,17 +23,11 @@ class testbench:
         self.jtag = JTAGDriver(bus)
         self.jtag.add_device(J1JTAGDevice())
 #         self.jtag.log.setLevel(logging.DEBUG)
+#         self.jtag.random_pause = True
         
 #         self.jtag_mon = JTAGMonitor(bus)
-        
-#         self.jtag.devices[0].print_regs()
+#         self.jtag_mon.log.setLevel(logging.DEBUG)
 
-#         self.clk = self.jtag.bus.tck
-        
-#         self.rst = dut.rst
-#         self.gck = dut.gck
-#         self.gc = GatedClock(self.gck, 100, units='ns', gated=False)
-#         start_soon(self.gc.start())
         
 # @test()
 # async def test_fsm_reset(dut):
@@ -83,6 +76,20 @@ async def test_userdata(dut):
     await tb.jtag.wait_clkn(5)
 
     tb.jtag.explict_ir = False
+    await tb.jtag.set_reset(4)
+    await tb.jtag.wait_clkn(10)
+    await tb.jtag.read_idcode()
+    await tb.jtag.read_val(0xe6712945, 'USERDATA')
+    for i in range(64):
+        val = randint(0, 0xffffffff)
+        await tb.jtag.write_val(val, 'USERDATA')
+        await tb.jtag.read_val(val, 'USERDATA')
+        if 0 == randint(0, 4):
+            await tb.jtag.read_idcode()
+    await tb.jtag.wait_clkn(5)
+
+    tb.jtag.explict_ir = False
+    tb.jtag.random_pause = True
     await tb.jtag.set_reset(4)
     await tb.jtag.wait_clkn(10)
     await tb.jtag.read_idcode()

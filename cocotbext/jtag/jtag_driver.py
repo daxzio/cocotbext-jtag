@@ -61,7 +61,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
 
         self.bus = bus
-        self.tx_fsm = JTAGTxSm(self.bus, randint(0, 0xffff))
+        self.tx_fsm = JTAGTxSm(self.bus, randint(0, 0xFFFF))
         self.rx_fsm = JTAGRxSm(self.bus)
 
         # start_soon(Clock(self.bus.tck, self.period, units=units).start())
@@ -133,7 +133,7 @@ class JTAGDriver(CocoTBExtLogger):
     async def _jtag_fsm(self):
         while True:
             await RisingEdge(self.bus.tck)
-#             self.log.debug(f"{self.rx_fsm.state} {self.rx_fsm.dr_pause}")
+            #             self.log.debug(f"{self.rx_fsm.state} {self.rx_fsm.dr_pause}")
             self.rx_fsm.update_state()
 
     async def _parse_tdo(self):
@@ -152,7 +152,6 @@ class JTAGDriver(CocoTBExtLogger):
                         raise Exception(
                             f"Expected: 0x{self.dr_val:08x} Returned: 0x{self.ret_val:08x}"
                         )
-
 
     async def reset_fsm(self):
         self.clock_gated = True
@@ -210,14 +209,17 @@ class JTAGDriver(CocoTBExtLogger):
         self.tx_fsm.explict_ir = self.explict_ir
         self.tx_fsm.start = True
         self.clock_gated = True
-        
+
         self.tx_fsm.gen_dr_random(self.random_pause)
         self.tx_fsm.gen_ir_random(self.random_pause)
         if not 0 == self.tx_fsm.dr_pause:
-            self.log.info(f"DR Delay {self.tx_fsm.dr_delay}, DR Pause {self.tx_fsm.dr_pause}")
+            self.log.info(
+                f"DR Delay {self.tx_fsm.dr_delay}, DR Pause {self.tx_fsm.dr_pause}"
+            )
         if not 0 == self.tx_fsm.ir_pause:
-            self.log.info(f"IR Delay {self.tx_fsm.ir_delay}, IR Pause {self.tx_fsm.ir_pause}")
-
+            self.log.info(
+                f"IR Delay {self.tx_fsm.ir_delay}, IR Pause {self.tx_fsm.ir_pause}"
+            )
 
         if "TEST_LOGIC_RESET" == self.tx_fsm.state and not self.bus.tms.value:
             self.bus.tms.value = True
@@ -225,22 +227,18 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.dr_val_out = 0
         while not self.tx_fsm.finished:
-#             self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_pause} {self.tx_fsm.dr_delay}")
+            #             self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_pause} {self.tx_fsm.dr_delay}")
             if "SHIFT_IR" == self.tx_fsm.state:
-                self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.ir_len} {self.tx_fsm.ir_pause} {self.tx_fsm.ir_delay}")
+                self.log.debug(
+                    f"{self.tx_fsm.state} {self.tx_fsm.ir_len} {self.tx_fsm.ir_pause} {self.tx_fsm.ir_delay}"
+                )
             elif "SHIFT_DR" == self.tx_fsm.state:
                 self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_len}")
             else:
                 self.log.debug(f"{self.tx_fsm.state}")
             self.tx_fsm.update_state()
             await FallingEdge(self.bus.tck)
-        #             if 'SHIFT_DR' == self.tx_fsm.state:
-        #                 self.dr_val_out = self.dr_val_out + (int(self.bus.tdo) << index)
-        # #                 print(index)
-        #                 print(f"{index} 0x{self.dr_val_out:08x}")
-        #                 index += 1
-        #             if 'UPDATE_DR' == self.tx_fsm.state:
-        #                 print(f"0x{self.dr_val_out:08x}")
+
         self.log.debug(f"{self.tx_fsm.state}")
         self.tx_fsm.update_state()
         await FallingEdge(self.bus.tck)
