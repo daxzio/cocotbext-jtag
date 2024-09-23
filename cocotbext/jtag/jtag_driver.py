@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 """
 
-from random import seed
+from random import seed, randint
 from math import ceil
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import FallingEdge
@@ -61,7 +61,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
 
         self.bus = bus
-        self.tx_fsm = JTAGTxSm(self.bus)
+        self.tx_fsm = JTAGTxSm(self.bus, randint(0, 0xffff))
         self.rx_fsm = JTAGRxSm(self.bus)
 
         # start_soon(Clock(self.bus.tck, self.period, units=units).start())
@@ -133,7 +133,7 @@ class JTAGDriver(CocoTBExtLogger):
     async def _jtag_fsm(self):
         while True:
             await RisingEdge(self.bus.tck)
-            self.log.debug(self.rx_fsm.state)
+#             self.log.debug(f"{self.rx_fsm.state} {self.rx_fsm.dr_pause}")
             self.rx_fsm.update_state()
 
     async def _parse_tdo(self):
@@ -144,15 +144,15 @@ class JTAGDriver(CocoTBExtLogger):
                 self.ret_val = (
                     self.rx_fsm.dr_val_out >> (len(self.devices) - 1 - self.device)
                 ) & mask
+                self.log.info(
+                    f"Device: {self.device} -            Received: 0x{self.ret_val:x}"
+                )
                 if not self.dr_val is None:
                     if not self.ret_val == self.dr_val and not self.write:
                         raise Exception(
                             f"Expected: 0x{self.dr_val:08x} Returned: 0x{self.ret_val:08x}"
                         )
 
-    #                     else:
-    #                         self.log.info(f"Test")
-    #                 self.log.info('Finish DR')
 
     async def reset_fsm(self):
         self.clock_gated = True
@@ -161,8 +161,6 @@ class JTAGDriver(CocoTBExtLogger):
             await FallingEdge(self.bus.tck)
         # self.bus.tms.value = 0
         self.clock_gated = False
-
-    #         self.total_ir_val_prev = None
 
     async def send_val(self, val=None, addr=0, device=0, write=True):
         self.device = device
@@ -212,17 +210,29 @@ class JTAGDriver(CocoTBExtLogger):
         self.tx_fsm.explict_ir = self.explict_ir
         self.tx_fsm.start = True
         self.clock_gated = True
+        
+        self.tx_fsm.gen_dr_random(self.random_pause)
+        self.tx_fsm.gen_ir_random(self.random_pause)
+        if not 0 == self.tx_fsm.dr_pause:
+            self.log.info(f"DR Delay {self.tx_fsm.dr_delay}, DR Pause {self.tx_fsm.dr_pause}")
+        if not 0 == self.tx_fsm.ir_pause:
+            self.log.info(f"IR Delay {self.tx_fsm.ir_delay}, IR Pause {self.tx_fsm.ir_pause}")
+
 
         if "TEST_LOGIC_RESET" == self.tx_fsm.state and not self.bus.tms.value:
             self.bus.tms.value = True
             await FallingEdge(self.bus.tck)
 
         self.dr_val_out = 0
-        #         index = 0
         while not self.tx_fsm.finished:
-            self.log.debug(f"{self.tx_fsm.state}")
+#             self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_pause} {self.tx_fsm.dr_delay}")
+            if "SHIFT_IR" == self.tx_fsm.state:
+                self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.ir_len} {self.tx_fsm.ir_pause} {self.tx_fsm.ir_delay}")
+            elif "SHIFT_DR" == self.tx_fsm.state:
+                self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_len}")
+            else:
+                self.log.debug(f"{self.tx_fsm.state}")
             self.tx_fsm.update_state()
-            #             await RisingEdge(self.bus.tck)
             await FallingEdge(self.bus.tck)
         #             if 'SHIFT_DR' == self.tx_fsm.state:
         #                 self.dr_val_out = self.dr_val_out + (int(self.bus.tdo) << index)
@@ -243,42 +253,6 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def read_val(self, val, addr=None, device=0):
         await self.send_val(val, addr, device, write=False)
-
-    #     async def _parse_tdo2(self, device):
-    #         self.ret_val = 0
-    #         await RisingEdge(self.bus.tck)
-    # #         if
-    #
-    #         for i in range(len(self.devices) - device - 1):
-    #             await RisingEdge(self.bus.tck)
-    #         for i in range(self.dr_len):
-    #             await RisingEdge(self.bus.tck)
-    #             # print(f"{i} {self.bus.tdo.value}")
-    #             # self.log.info(f"{i} {self.bus.tdo.value}")
-    #             self.ret_val += self.bus.tdo.value << i
-    #         #         if not self.suppress_log:
-    #         #             self.log.info(f"Device: {self.device} - Addr: 0x{self.ir_val:04x}  Returned: 0x{self.ret_val:08x}")
-    # #         if not self.dr_val is None:
-    # #             if not self.ret_val == self.dr_val:
-    # #                 raise Exception(
-    # #                     f"Expected: 0x{self.dr_val:08x} Returned: 0x{self.ret_val:08x}"
-    # #                 )
-    #         #         print(f"0x{self.ret_val:08x}")
-    #         self.suppress_log = False
-
-    #     async def enable_bypass(self, device=0):
-    #         raise
-    #         self.device = device
-    #         self.suppress_log = True
-    #         await self.write_val(0x1, "BYPASS", self.device)
-    #         self.log.info(f"Device: {self.device} - Enable BYPASS")
-    #
-    #     async def disable_bypass(self, device=0):
-    #         raise
-    #         self.device = device
-    #         self.suppress_log = True
-    #         await self.write_val(0x0, "BYPASS", self.device)
-    #         self.log.info(f"Device: {self.device} - Disable BYPASS")
 
     async def reset_finished(self):
         await self.reset.reset_finished()

@@ -22,6 +22,8 @@ THE SOFTWARE.
 
 """
 
+from random import seed, randint
+
 # from enum import Enum
 # class JTAGState(Enum):
 #     TEST_LOGIC_RESET = 0x0
@@ -43,22 +45,46 @@ THE SOFTWARE.
 
 
 class JTAGTxSm:
-    def __init__(self, bus):
+    def __init__(self, bus, iseed=9):
         self.reset_state()
         self.bus = bus
+        self.seed = iseed
+        seed(self.seed)
 
     def reset_state(self):
         self.state = "TEST_LOGIC_RESET"
-        self.dr_len = 0
-        self.dr_val = 0
         self.ir_len = 0
         self.ir_val = 0
+        self.ir_pause = 0
+        self.ir_delay = 0
         self.ir_val_prev = None
+        self.dr_len = 0
+        self.dr_val = 0
+        self.dr_pause = 0
+        self.dr_delay = 0
         self.write = False
         self.finished = False
         self.explict_ir = False
         self.start = False
+    
+    def gen_ir_random(self, random=False):
+        self.ir_pause = 0
+        self.ir_delay = 0
+        if random:
+            if 0 == randint(0, 4):
+                self.ir_pause = randint(0, self.ir_len)+1
+                self.ir_delay = randint(0, 4)+1
+#                 print("ir", self.ir_pause, self.ir_delay)
 
+    def gen_dr_random(self, random=False):
+        self.dr_pause = 0
+        self.dr_delay = 0
+        if random:
+            if 0 == randint(0, 4):
+                self.dr_pause = randint(0, self.dr_len)+1
+                self.dr_delay = randint(0, 7)+1
+#                 print("dr", self.dr_pause, self.dr_delay)
+    
     def update_state(self):
 
         if self.state == "TEST_LOGIC_RESET":
@@ -99,19 +125,35 @@ class JTAGTxSm:
                 self.bus.tdi.value = False
             self.dr_val = self.dr_val >> 1
             self.dr_len -= 1
+            self.dr_pause -= 1
             self.bus.tms.value = False
-            if self.dr_len <= 0:
+            if self.dr_pause == 0 and not 0 == self.dr_delay:
+                self.state = "EXIT1_DR"
+                self.bus.tms.value = True
+            elif self.dr_len <= 0:
                 self.state = "EXIT1_DR"
                 self.bus.tms.value = True
         elif self.state == "EXIT1_DR":
-            self.state = "UPDATE_DR"
-            self.bus.tms.value = True
+            if self.dr_pause == 0 and not 0 == self.dr_delay:
+                self.state = "PAUSE_DR"
+                self.bus.tms.value = False
+            else:
+                self.state = "UPDATE_DR"
+                self.bus.tms.value = True
         elif self.state == "PAUSE_DR":
-            pass
+            self.bus.tms.value = False
+            self.dr_delay -= 1
+            if self.dr_delay <= 0:
+                self.state = "EXIT2_DR"
+                self.bus.tms.value = True
         elif self.state == "EXIT2_DR":
-            pass
+            if self.dr_len <= 0:
+                self.state = "UPDATE_DR"
+                self.bus.tms.value = True
+            else:
+                self.state = "SHIFT_DR"
+                self.bus.tms.value = False
         elif self.state == "UPDATE_DR":
-            #             self.finished = True
             if self.dr_len <= 0 and self.ir_len <= 0:
                 self.state = "RUN_TEST_IDLE"
                 self.bus.tms.value = False
@@ -120,11 +162,9 @@ class JTAGTxSm:
                 self.state = "SELECT_DR"
                 self.bus.tms.value = True
         elif self.state == "SELECT_IR":
-            #             print(self.dr_len, self.ir_len)
             if self.dr_len <= 0 and self.ir_len <= 0:
                 self.state = "TEST_LOGIC_RESET"
                 self.bus.tms.value = True
-            #                 self.finished = True
             else:
                 self.state = "CAPTURE_IR"
                 self.bus.tms.value = False
@@ -132,21 +172,37 @@ class JTAGTxSm:
             self.state = "SHIFT_IR"
             self.bus.tms.value = False
             self.ir_val_prev = self.ir_val
-        #             exit()
         elif self.state == "SHIFT_IR":
             self.bus.tdi.value = self.ir_val & 0x1
             self.ir_val = self.ir_val >> 1
             self.ir_len -= 1
-            if self.ir_len <= 0:
+            self.ir_pause -= 1
+            if self.ir_pause == 0 and not 0 == self.ir_delay:
+                self.bus.tms.value = True
+                self.state = "EXIT1_IR"
+            elif self.ir_len <= 0:
                 self.bus.tms.value = True
                 self.state = "EXIT1_IR"
         elif self.state == "EXIT1_IR":
-            self.state = "UPDATE_IR"
-            self.bus.tms.value = True
+            if self.ir_pause == 0 and not 0 == self.ir_delay:
+                self.state = "PAUSE_IR"
+                self.bus.tms.value = False
+            else:
+                self.state = "UPDATE_IR"
+                self.bus.tms.value = True
         elif self.state == "PAUSE_IR":
-            self.state = "SHIFT_IR"
+            self.bus.tms.value = False
+            self.ir_delay -= 1
+            if self.ir_delay <= 0:
+                self.state = "EXIT2_IR"
+                self.bus.tms.value = True
         elif self.state == "EXIT2_IR":
-            self.state = "UPDATE_IR"
+            if self.ir_len <= 0:
+                self.state = "UPDATE_IR"
+                self.bus.tms.value = True
+            else:
+                self.state = "SHIFT_IR"
+                self.bus.tms.value = False
         elif self.state == "UPDATE_IR":
             if self.dr_len <= 0 and self.ir_len <= 0:
                 self.state = "RUN_TEST_IDLE"
@@ -161,6 +217,8 @@ class JTAGRxSm:
     def __init__(self, bus):
         self.reset_state()
         self.bus = bus
+#         self.seed = iseed
+#         seed(self.seed)
 
     def reset_state(self):
         self.state = "TEST_LOGIC_RESET"
