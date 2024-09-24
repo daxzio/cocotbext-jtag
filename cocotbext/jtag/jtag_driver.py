@@ -111,12 +111,12 @@ class JTAGDriver(CocoTBExtLogger):
     def active_device(self):
         return self.devices[self.device]
 
-    @property
-    def total_ir_len(self):
-        total = 0
-        for d in self.devices:
-            total += d.ir_len
-        return total
+#     @property
+#     def total_ir_len(self):
+#         total = 0
+#         for d in self.devices:
+#             total += d.ir_len
+#         return total
 
     def add_device(self, device):
         self.devices.append(device)
@@ -145,7 +145,7 @@ class JTAGDriver(CocoTBExtLogger):
                     self.rx_fsm.dr_val_out >> (len(self.devices) - 1 - self.device)
                 ) & mask
                 self.log.info(
-                    f"Device: {self.device} -            Received: 0x{self.ret_val:x}"
+                    f"Device: {self.device} -              Received: 0x{self.ret_val:08x}"
                 )
                 if not self.dr_val is None:
                     if not self.ret_val == self.dr_val and not self.write:
@@ -161,7 +161,7 @@ class JTAGDriver(CocoTBExtLogger):
         # self.bus.tms.value = 0
         self.clock_gated = False
 
-    async def send_val(self, addr=0, val=None, device=0, write=True):
+    async def send_val(self, addr, val=None, device=0, write=True):
         self.device = device
         self.write = write
         if isinstance(addr, str):
@@ -185,24 +185,22 @@ class JTAGDriver(CocoTBExtLogger):
             drpad = ceil(self.dr_len / 4)
             if self.write:
                 self.log.info(
-                    f"Device: {self.device} - Addr: 0x{self.ir_val:0{irpad}x}    Write: 0x{self.dr_val:{drpad}x}"
+                    f"Device: {self.device} - Addr: {hex(self.ir_val):>6}    Write: 0x{self.dr_val:0{drpad}x}"
                 )
             else:
                 self.log.info(
-                    f"Device: {self.device} - Addr: 0x{self.ir_val:0{irpad}x} Expected: 0x{self.dr_val:0{drpad}x}"
+                    f"Device: {self.device} - Addr: {hex(self.ir_val):>6} Expected: 0x{self.dr_val:0{drpad}x}"
                 )
 
-        self.total_ir_len2 = 0
+        self.total_ir_len = 0
         self.total_ir_val = 0
         for i, d in reversed(list(enumerate(self.devices))):
             if i == device:
                 v = self.ir_val
             else:
                 v = self.devices[i].names["BYPASS"].address
-            self.total_ir_val += v << self.total_ir_len2
-            self.total_ir_len2 += d.ir_len
-
-        #         self.log.info(f"ir_val 0x{self.total_ir_val:x} ir_len {self.total_ir_len} dr_val 0x{self.total_dr_val:x} ir_len {self.total_dr_len}")
+            self.total_ir_val += v << self.total_ir_len
+            self.total_ir_len += d.ir_len
 
         self.tx_fsm.ir_val = self.total_ir_val
         self.tx_fsm.ir_len = self.total_ir_len
@@ -248,12 +246,12 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.clock_gated = False
 
-    async def write_val(self, addr=None, val=None, device=0):
-        await self.send_val(addr=addr, val=val, device=device, write=True)
+    async def write_val(self, addr, val=None, device=0):
+        await self.send_val(addr, val, device, write=True)
         self.suppress_log = False
 
-    async def read_val(self, addr=None, val=None, device=0):
-        await self.send_val(addr=addr, val=val, device=device, write=False)
+    async def read_val(self, addr, val=None, device=0):
+        await self.send_val(addr, val, device, write=False)
 
     async def reset_finished(self):
         await self.reset.reset_finished()
@@ -262,7 +260,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.device = device
         self.suppress_log = True
         await self.send_val(
-            val=self.active_device.idcode, addr="IDCODE", device=self.device, write=False
+            "IDCODE", self.active_device.idcode, device=self.device, write=False
         )
         self.idcode = self.ret_val
-        self.log.info(f"Device: {self.device} - IDCODE: 0x{self.idcode:08x}")
+        self.log.info(f"Device: {self.device} -                IDCODE: 0x{self.idcode:08x}")
