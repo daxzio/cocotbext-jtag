@@ -10,7 +10,8 @@ on:
   
 jobs:
   build_dep:
-    uses: daxzio/setup-eda/.github/workflows/setup_icarus.yml@main
+#     uses: daxzio/setup-eda/.github/workflows/setup_icarus.yml@main
+    uses: ./.github/workflows/setup_icarus.yml
 
   build:
     strategy:
@@ -30,4 +31,4 @@ jobs:
       
       - name: Report Icarus
         run: |
-          which icarus
+          which iverilog
