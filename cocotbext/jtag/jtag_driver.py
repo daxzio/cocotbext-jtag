@@ -252,6 +252,7 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def read_val(self, addr, val=None, device=0):
         await self.send_val(addr, val, device, write=False)
+        return self.ret_val
 
     async def reset_finished(self):
         await self.reset.reset_finished()

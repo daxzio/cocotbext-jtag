@@ -12,6 +12,7 @@ from cocotbext.jtag import JTAGDevice
 from cocotbext.jtag import JTAGBus
 from cocotbext.jtag.devices.H3JTAGDevice import H3JTAGDevice
 from cocotbext.jtag.clkreset import Reset, Clk
+from cocotbext.uart import UartSource, UartSink
 
 
 class testbench:
@@ -27,6 +28,9 @@ class testbench:
         self.clk = Clk(dut, period=87, clkname="clkin")
         self.reset = Reset(dut, resetname='rst', reset_sense=1, reset_length=400)
 
+        self.uart_source = UartSource(getattr(dut, "uart_rx"), baud=230400, bits=8)
+        self.uart_sink   = UartSink(getattr(dut, "uart_tx"), baud=230400, bits=8)
+
  
 @test()
 async def test_repeat(dut):
@@ -37,7 +41,8 @@ async def test_repeat(dut):
 #     await tb.reset.set_reset()
     await tb.jtag.wait_clkn(5)
     await tb.jtag.read_idcode()
-    await tb.jtag.read_val(addr='DTMCS')
+    x = await tb.jtag.read_val(addr='DTMCS')
+    print(f"{hex(x)}")
 #     await tb.jtag.read_val(0x53817905, 'IDCODE')
 #     tb.jtag.explict_ir = True
 #     await tb.jtag.read_val(0x53817905, 'IDCODE')

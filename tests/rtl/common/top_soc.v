@@ -444,7 +444,7 @@ module top_soc #(
         .dst_hmastlock  ({bridge_hmastlock, sram0_hmastlock}),
         .dst_hwdata     ({bridge_hwdata, sram0_hwdata}),
         .dst_hrdata     ({bridge_hrdata, sram0_hrdata}),
-        .dst_hexokay    (0),
+        .dst_hexokay    (2'b0),
         .dst_hmaster    (),
         .dst_hexcl      ()
     );
