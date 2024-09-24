@@ -333,6 +333,7 @@ hazard3_cpu_1port #(
 	.hburst                     (proc_hburst),
 	.hprot                      (proc_hprot),
 	.hmastlock                  (proc_hmastlock),
+	.hmaster                    ( ),
 	.hexcl                      (proc_hexcl),
 	.hready                     (proc_hready),
 	.hresp                      (proc_hresp),
@@ -427,6 +428,10 @@ ahbl_splitter #(
 	.src_hmastlock   (proc_hmastlock),
 	.src_hwdata      (proc_hwdata   ),
 	.src_hrdata      (proc_hrdata   ),
+	.src_hexokay     ( ),
+	.src_hmaster     (8'h00   ),
+	.src_hexcl       (1'b0   ),
+    
 
 	.dst_hready_resp ({bridge_hready_resp , sram0_hready_resp}),
 	.dst_hready      ({bridge_hready      , sram0_hready     }),
@@ -439,7 +444,10 @@ ahbl_splitter #(
 	.dst_hprot       ({bridge_hprot       , sram0_hprot      }),
 	.dst_hmastlock   ({bridge_hmastlock   , sram0_hmastlock  }),
 	.dst_hwdata      ({bridge_hwdata      , sram0_hwdata     }),
-	.dst_hrdata      ({bridge_hrdata      , sram0_hrdata     })
+	.dst_hrdata      ({bridge_hrdata      , sram0_hrdata     }),
+	.dst_hexokay     (0),
+	.dst_hmaster     ( ),
+	.dst_hexcl       ( )
 );
 
 // APB layer

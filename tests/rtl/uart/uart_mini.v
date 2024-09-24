@@ -328,6 +328,12 @@ uart_regs regs (
 	.fstat_rxempty_i (rxfifo_empty),
 	.fstat_rxover_i  (rxfifo_full && rxfifo_wen),
 	.fstat_rxunder_i (rxfifo_empty && rxfifo_ren),
+	.fstat_txover_o  ( ),
+	.fstat_txunder_o ( ),
+	.fstat_rxover_o  ( ),
+	.fstat_rxunder_o ( ),
+
+
 	.tx_o            (txfifo_wdata),
 	.tx_wen          (txfifo_wen),
 	.rx_i            (rxfifo_rdata),

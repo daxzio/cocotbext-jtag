@@ -439,7 +439,8 @@ if (EXTENSION_ZCMP) begin: have_uop_ctr;
 		end
 	end
 end else begin: no_uop_ctr
-	always @ (*) uop_ctr = 4'h0;
+// 	always @ (*) uop_ctr = 4'h0;
+    assign uop_ctr = 4'h0;
 end
 endgenerate
 
