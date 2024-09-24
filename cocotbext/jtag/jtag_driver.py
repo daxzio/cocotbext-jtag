@@ -161,7 +161,7 @@ class JTAGDriver(CocoTBExtLogger):
         # self.bus.tms.value = 0
         self.clock_gated = False
 
-    async def send_val(self, val=None, addr=0, device=0, write=True):
+    async def send_val(self, addr=0, val=None, device=0, write=True):
         self.device = device
         self.write = write
         if isinstance(addr, str):
@@ -174,7 +174,10 @@ class JTAGDriver(CocoTBExtLogger):
         self.ir_val = addr
         self.dr_len = self.active_device.addresses[addr].width
         self.dr_val = val
-        self.total_dr_val = val << (len(self.devices) - 1 - self.device)
+        if val is None:
+            self.total_dr_val = None
+        else:
+            self.total_dr_val = val << (len(self.devices) - 1 - self.device)
         self.total_dr_len = self.dr_len + len(self.devices) - 1
 
         if not self.suppress_log:
@@ -245,12 +248,12 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.clock_gated = False
 
-    async def write_val(self, val, addr=None, device=0):
-        await self.send_val(val, addr, device, write=True)
+    async def write_val(self, addr=None, val=None, device=0):
+        await self.send_val(addr=addr, val=val, device=device, write=True)
         self.suppress_log = False
 
-    async def read_val(self, val, addr=None, device=0):
-        await self.send_val(val, addr, device, write=False)
+    async def read_val(self, addr=None, val=None, device=0):
+        await self.send_val(addr=addr, val=val, device=device, write=False)
 
     async def reset_finished(self):
         await self.reset.reset_finished()
@@ -259,7 +262,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.device = device
         self.suppress_log = True
         await self.send_val(
-            self.active_device.idcode, "IDCODE", self.device, write=False
+            val=self.active_device.idcode, addr="IDCODE", device=self.device, write=False
         )
         self.idcode = self.ret_val
         self.log.info(f"Device: {self.device} - IDCODE: 0x{self.idcode:08x}")

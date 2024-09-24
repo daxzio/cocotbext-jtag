@@ -125,7 +125,8 @@ class JTAGTxSm:
                 self.bus.tdi.value = self.dr_val & 0x1
             else:
                 self.bus.tdi.value = False
-            self.dr_val = self.dr_val >> 1
+            if not self.dr_val is None:
+                self.dr_val = self.dr_val >> 1
             self.dr_len -= 1
             self.dr_pause -= 1
             self.bus.tms.value = False
