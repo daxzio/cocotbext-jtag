@@ -31,18 +31,52 @@ class testbench:
         self.uart_source = UartSource(getattr(dut, "uart_rx"), baud=230400, bits=8)
         self.uart_sink   = UartSink(getattr(dut, "uart_tx"), baud=230400, bits=8)
 
+    async def read_dtmcs(self):
+        x = await self.jtag.read_val('DTMCS')
+        y = {
+            'version'      : [ 0, 4, 0],
+            'abits'        : [ 4, 6, 0],
+            'dmistat'      : [10, 2, 0],
+            'idle'         : [12, 3, 0],
+            'dmireset'     : [16, 1, 1],
+            'dmihardreset' : [17, 1, 1],
+        }
+        version      = (x >>  0) & (2**4)-1
+        abits        = (x >>  4) & (2**6)-1
+        dmistat      = (x >> 10) & (2**2)-1
+        idle         = (x >> 12) & (2**3)-1
+        dmireset     = (x >> 16) & (2**1)-1
+        dmihardreset = (x >> 17) & (2**1)-1
+        print(f"{hex(x)}")
+        print(version, abits, dmistat, idle, dmireset, dmihardreset)
+
  
 @test()
 async def test_repeat(dut):
     
     tb = testbench(dut)
+    tb.jtag.explict_ir = False
     await tb.reset.reset_finished()
 #     await tb.jtag.wait_clkn(5)
 #     await tb.reset.set_reset()
     await tb.jtag.wait_clkn(5)
     await tb.jtag.read_idcode()
-    x = await tb.jtag.read_val(addr='DTMCS')
-    print(f"{hex(x)}")
+    await tb.read_dtmcs()
+
+    op = 1
+    addr = 1
+    data = 1
+    val = (addr << 34) + (data << 2) + op
+    print(hex(val))
+    x = await tb.jtag.send_val('DMI', val)
+    print(hex(tb.jtag.ret_val))
+    x = await tb.jtag.send_val('DMI', val)
+    print(hex(tb.jtag.ret_val))
+    x = await tb.jtag.send_val('DMI', 0x0c00000021)
+#     x = await tb.jtag.write_val('DMI', 0x0000000001)
+#     x = await tb.jtag.read_val('DMI')
+    await tb.jtag.wait_clkn(5)
+    
 #     await tb.jtag.read_val(0x53817905, 'IDCODE')
 #     tb.jtag.explict_ir = True
 #     await tb.jtag.read_val(0x53817905, 'IDCODE')

@@ -75,8 +75,6 @@ class JTAGTxSm:
                 self.ir_pause = randint(0, self.ir_len) + 1
                 self.ir_delay = randint(0, 4) + 1
 
-    #                 print("ir", self.ir_pause, self.ir_delay)
-
     def gen_dr_random(self, random=False):
         self.dr_pause = 0
         self.dr_delay = 0
@@ -84,8 +82,6 @@ class JTAGTxSm:
             if 0 == randint(0, 4):
                 self.dr_pause = randint(0, self.dr_len) + 1
                 self.dr_delay = randint(0, 7) + 1
-
-    #                 print("dr", self.dr_pause, self.dr_delay)
 
     def update_state(self):
 
@@ -97,9 +93,6 @@ class JTAGTxSm:
                 self.bus.tms.value = False
         elif self.state == "RUN_TEST_IDLE":
             self.finished = False
-            # print(self.explict_ir, self.ir_val, self.ir_val_prev)
-            if not self.explict_ir and (self.ir_val == self.ir_val_prev):
-                self.ir_len = 0
             self.state = "SELECT_DR"
             self.bus.tms.value = True
             self.start = False
@@ -110,7 +103,8 @@ class JTAGTxSm:
             #                 self.bus.tms.value = False
             self.bus.tdi.value = False
         elif self.state == "SELECT_DR":
-            #             print(self.ir_len)
+            if not self.explict_ir and (self.ir_val == self.ir_val_prev):
+                self.ir_len = 0
             if self.dr_len <= 0 or self.ir_len > 0:
                 self.state = "SELECT_IR"
                 self.bus.tms.value = True

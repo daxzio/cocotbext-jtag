@@ -30,11 +30,12 @@ class JTAGMonitor(CocoTBExtLogger):
         start_soon(self._reset())
 
     async def _reset(self):
-        while True:
-            await FallingEdge(self.bus.trst)
-            self.log.info("TRST Reset Detected")
-            self.fsm.state = "TEST_LOGIC_RESET"
-            await RisingEdge(self.bus.trst)
+        if hasattr(self.bus, "trst"):
+            while True:
+                await FallingEdge(self.bus.trst)
+                self.log.info("TRST Reset Detected")
+                self.fsm.state = "TEST_LOGIC_RESET"
+                await RisingEdge(self.bus.trst)
 
     async def _detect_reset(self):
         count = 0

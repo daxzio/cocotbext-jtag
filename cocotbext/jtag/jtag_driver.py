@@ -183,13 +183,17 @@ class JTAGDriver(CocoTBExtLogger):
         if not self.suppress_log:
             irpad = ceil(self.active_device.ir_len / 4)
             drpad = ceil(self.dr_len / 4)
+            exp = ""
+            if not self.dr_val is None:
+                exp =  f" Expected: 0x{self.dr_val:0{drpad}x}"
             if self.write:
                 self.log.info(
                     f"Device: {self.device} - Addr: {hex(self.ir_val):>6}    Write: 0x{self.dr_val:0{drpad}x}"
                 )
             else:
                 self.log.info(
-                    f"Device: {self.device} - Addr: {hex(self.ir_val):>6} Expected: 0x{self.dr_val:0{drpad}x}"
+#                     f"Device: {self.device} - Addr: {hex(self.ir_val):>6} Expected: 0x{self.dr_val:0{drpad}x}"
+                    f"Device: {self.device} - Addr: {hex(self.ir_val):>6}{exp}"
                 )
 
         self.total_ir_len = 0
