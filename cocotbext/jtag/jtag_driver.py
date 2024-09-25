@@ -181,7 +181,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.total_dr_len = self.dr_len + len(self.devices) - 1
 
         if not self.suppress_log:
-            irpad = ceil(self.active_device.ir_len / 4)
+#             irpad = ceil(self.active_device.ir_len / 4)
             drpad = ceil(self.dr_len / 4)
             exp = ""
             if not self.dr_val is None:
