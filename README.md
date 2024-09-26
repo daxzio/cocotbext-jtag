@@ -90,6 +90,7 @@ First inherit from the base class, , and after add all the other IR regiters usi
 
 * `add_jtag_reg(name, width, address)`: Add an IR register to `JTAGDevice`. _name_ is a string, _width_ is the DR shift width of the register and the address, which should be with in the range if the _ir_len_ of `JTAGDevice`
 
+
     from cocotbext.jtag import JTAGDevice
 
     class J1JTAGDevice(JTAGDevice):
@@ -109,7 +110,7 @@ This results in a `JTAGDevice` that has 4 IR register defined:
     0x1f: BYPASS[0:0] 
 
 
-Multiple devices inside the JtAG chain:
+Multiple devices inside the JTAG chain:
 
     from cocotbext.jtag import JTAGDriver
     from cocotbext.jtag import JTAGBus
