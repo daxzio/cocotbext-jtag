@@ -88,9 +88,6 @@ A `JTAGDevice` needs a _name_, _idcode_ and _ir_len_.  It also seens to have the
 First inherit from the base class, , and after add all the other IR regiters using the _add_jtag_reg_ method.
 
 
-* `add_jtag_reg(name, width, address)`: Add an IR register to `JTAGDevice`. _name_ is a string, _width_ is the DR shift width of the register and the address, which should be with in the range if the _ir_len_ of `JTAGDevice`
-
-
     from cocotbext.jtag import JTAGDevice
 
     class J1JTAGDevice(JTAGDevice):
@@ -100,6 +97,9 @@ First inherit from the base class, , and after add all the other IR regiters usi
             self.add_jtag_reg('USERDATA', 32, 0x8)
             self.add_jtag_reg('USEROP', 8, 0x9)
             self.idle_delay = 6
+
+* `add_jtag_reg(name, width, address)`: Add an IR register to `JTAGDevice`. _name_ is a string, _width_ is the DR shift width of the register and the address, which should be with in the range if the _ir_len_ of `JTAGDevice`
+
             
 This results in a `JTAGDevice` that has 4 IR register defined:
 
