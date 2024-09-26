@@ -101,14 +101,15 @@ First inherit from the base class, , and after add all the other IR regiters usi
             self.idle_delay = 6
             
 This results in a `JTAGDevice` that has 4 IR register defined:
-    
+
+
     0x08: USERDATA[31:0] 
     0x09: USEROP[7:0] 
     0x1e: IDCODE[31:0] 
     0x1f: BYPASS[0:0] 
 
 
-
+Multiple devices inside the JtAG chain:
 
     from cocotbext.jtag import JTAGDriver
     from cocotbext.jtag import JTAGBus
