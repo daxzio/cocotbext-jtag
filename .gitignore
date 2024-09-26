@@ -7,6 +7,7 @@ irun*
 libs/
 waves.shm/
 results.xml
+combined_results.xml
 *.egg-info/
 *.vcd
 *.vcd.hier
