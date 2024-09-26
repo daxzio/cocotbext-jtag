@@ -111,12 +111,12 @@ class JTAGDriver(CocoTBExtLogger):
     def active_device(self):
         return self.devices[self.device]
 
-#     @property
-#     def total_ir_len(self):
-#         total = 0
-#         for d in self.devices:
-#             total += d.ir_len
-#         return total
+    #     @property
+    #     def total_ir_len(self):
+    #         total = 0
+    #         for d in self.devices:
+    #             total += d.ir_len
+    #         return total
 
     def add_device(self, device):
         self.devices.append(device)
@@ -129,6 +129,9 @@ class JTAGDriver(CocoTBExtLogger):
             await self.reset.set_reset(num)
         else:
             self.log.warning("JTAG has no reset, doing nothing!")
+
+    async def reset_finished(self):
+        await self.reset.reset_finished()
 
     async def _jtag_fsm(self):
         while True:
@@ -181,18 +184,17 @@ class JTAGDriver(CocoTBExtLogger):
         self.total_dr_len = self.dr_len + len(self.devices) - 1
 
         if not self.suppress_log:
-#             irpad = ceil(self.active_device.ir_len / 4)
+            #             irpad = ceil(self.active_device.ir_len / 4)
             drpad = ceil(self.dr_len / 4)
             exp = ""
             if not self.dr_val is None:
-                exp =  f" Expected: 0x{self.dr_val:0{drpad}x}"
+                exp = f" Expected: 0x{self.dr_val:0{drpad}x}"
             if self.write:
                 self.log.info(
                     f"Device: {self.device} - Addr: {hex(self.ir_val):>6}    Write: 0x{self.dr_val:0{drpad}x}"
                 )
             else:
                 self.log.info(
-#                     f"Device: {self.device} - Addr: {hex(self.ir_val):>6} Expected: 0x{self.dr_val:0{drpad}x}"
                     f"Device: {self.device} - Addr: {hex(self.ir_val):>6}{exp}"
                 )
 
@@ -263,9 +265,6 @@ class JTAGDriver(CocoTBExtLogger):
         await self.send_val(addr=None, val=None, device=0, write=False)
         return self.ret_val
 
-    async def reset_finished(self):
-        await self.reset.reset_finished()
-
     async def read_idcode(self, device=0):
         self.device = device
         self.suppress_log = True
@@ -273,4 +272,6 @@ class JTAGDriver(CocoTBExtLogger):
             "IDCODE", self.active_device.idcode, device=self.device, write=False
         )
         self.idcode = self.ret_val
-        self.log.info(f"Device: {self.device} -                IDCODE: 0x{self.idcode:08x}")
+        self.log.info(
+            f"Device: {self.device} -                IDCODE: 0x{self.idcode:08x}"
+        )

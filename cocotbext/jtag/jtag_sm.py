@@ -95,8 +95,8 @@ class JTAGTxSm:
                 self.bus.tms.value = False
         elif self.state == "RUN_TEST_IDLE":
             self.finished = False
-            #print(self.idle_delay)
-            self.idle_delay = max(self.idle_delay-1, 0)
+            # print(self.idle_delay)
+            self.idle_delay = max(self.idle_delay - 1, 0)
             if self.idle_delay <= 0:
                 self.state = "SELECT_DR"
                 self.bus.tms.value = True
