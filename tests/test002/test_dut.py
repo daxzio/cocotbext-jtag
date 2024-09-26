@@ -58,16 +58,16 @@ async def test_idcodes(dut):
     await tb.jtag.read_idcode(2)
 
     tb.jtag.explict_ir = True
-    await tb.jtag.read_val(0xa92434cf, 'IDCODE', 2)
-    await tb.jtag.read_val(0xc8215c33, 'IDCODE', 1)
-    await tb.jtag.read_val(0x53817905, 'IDCODE', 0)
+    await tb.jtag.read_val('IDCODE', 0xa92434c4, 2)
+    await tb.jtag.read_val('IDCODE', 0xc8215c33, 1)
+    await tb.jtag.read_val('IDCODE', 0x53817905, 0)
     
     await tb.jtag.set_reset(4)
     await tb.jtag.wait_clkn(20)
     tb.jtag.explict_ir = False
-    await tb.jtag.read_val(0xa92434cf, 'IDCODE', 2)
-    await tb.jtag.read_val(0xc8215c33, 'IDCODE', 1)
-    await tb.jtag.read_val(0x53817905, 'IDCODE', 0)
+    await tb.jtag.read_val('IDCODE', 0xa92434cf, 2)
+    await tb.jtag.read_val('IDCODE', 0xc8215c33, 1)
+    await tb.jtag.read_val('IDCODE', 0x53817905, 0)
     
 @test()
 async def test_repeat_basic(dut):
@@ -76,17 +76,17 @@ async def test_repeat_basic(dut):
     await tb.jtag.set_reset(4)
     await tb.jtag.wait_clkn(20)
 
-    await tb.jtag.read_val(0x98754ae7, 'USERDATA', 2)
-    await tb.jtag.read_val(0x46834257, 'USERDATA', 1)
-    await tb.jtag.read_val(0xe6712945, 'USERDATA', 0)
+    await tb.jtag.read_val('USERDATA', 0x98754ae7, 2)
+    await tb.jtag.read_val('USERDATA', 0x46834257, 1)
+    await tb.jtag.read_val('USERDATA', 0xe6712945, 0)
 
-    await tb.jtag.write_val(0xeeeddff5, 'USERDATA', 2)
-    await tb.jtag.write_val(0x523a5a21, 'USERDATA', 1)
-    await tb.jtag.write_val(0xadc5a5de, 'USERDATA', 0)
+    await tb.jtag.write_val('USERDATA', 0xeeeddff5, 2)
+    await tb.jtag.write_val('USERDATA', 0x523a5a21, 1)
+    await tb.jtag.write_val('USERDATA', 0xadc5a5de, 0)
 
-    await tb.jtag.read_val(0xeeeddff5, 'USERDATA', 2)
-    await tb.jtag.read_val(0x523a5a21, 'USERDATA', 1)
-    await tb.jtag.read_val(0xadc5a5de, 'USERDATA', 0)
+    await tb.jtag.read_val('USERDATA', 0xeeeddff5, 2)
+    await tb.jtag.read_val('USERDATA', 0x523a5a21, 1)
+    await tb.jtag.read_val('USERDATA', 0xadc5a5de, 0)
 
     await tb.jtag.wait_clkn(20)
 
@@ -108,9 +108,9 @@ async def test_repeat_extensive(dut):
     for i in range(64):
         index0 = randint(0, len(tb.jtag.devices)-1)
         index1 = randint(0, len(tb.jtag.devices)-1)
-        await tb.jtag.read_val(vals[index0], 'USERDATA', index0)
+        await tb.jtag.read_val('USERDATA', vals[index0], index0)
         val = randint(0, 0xffffffff)
-        await tb.jtag.write_val(val, 'USERDATA', index1)
+        await tb.jtag.write_val('USERDATA', val, index1)
         vals[index1] = val
 
 # #     await tb.jtag.read_val(vals[2], 'USERDATA', 2)
