@@ -1,9 +1,9 @@
 SIM?=icarus
 
 default:
-	cd tests/test001 ; make clean sim
-	cd tests/test002 ; make clean sim
-	cd tests/hazard3 ; make clean sim
+	cd tests/test001 ; make clean sim ; grep -zv failure results.xml
+	cd tests/test002 ; make clean sim ; grep -zv failure results.xml
+	cd tests/hazard3 ; make clean sim ; grep -zv failure results.xml
 
 lint:
 	pyflakes cocotbext
