@@ -23,8 +23,8 @@ class testbench:
 #         self.jtag.log.setLevel(logging.DEBUG)
 #         self.jtag.random_pause = True
         
-#         self.jtag_mon = JTAGMonitor(bus)
-#         self.jtag_mon.log.setLevel(logging.DEBUG)
+        self.jtag_mon = JTAGMonitor(bus)
+        self.jtag_mon.log.setLevel(logging.DEBUG)
         self.clk = Clk(dut, period=87, clkname="clkin")
         self.reset = Reset(dut, resetname='rst', reset_sense=1, reset_length=400)
 
@@ -50,6 +50,22 @@ class testbench:
         print(f"{hex(x)}")
         print(version, abits, dmistat, idle, dmireset, dmihardreset)
 
+    async def read_dmi(self, addr, data=None):
+        op = 1
+#         val = (addr << 34) + (data << 2) + op
+        val = (addr << 34) + (0 << 2) + op
+        print(hex(val))
+        await self.jtag.send_val('DMI', val)
+        x = await self.jtag.read_val('DMI')
+        print(hex(x))
+ 
+    async def write_dmi(self, addr, data):
+        op = 2
+        val = (addr << 34) + (data << 2) + op
+        print(hex(val))
+        await self.jtag.send_val('DMI', val)
+#         x = await self.jtag.read_val('DMI')
+#         print(hex(x))
  
 @test()
 async def test_repeat(dut):
@@ -63,18 +79,23 @@ async def test_repeat(dut):
     await tb.jtag.read_idcode()
     await tb.read_dtmcs()
 
-    op = 1
-    addr = 1
-    data = 1
-    val = (addr << 34) + (data << 2) + op
-    print(hex(val))
-    x = await tb.jtag.send_val('DMI', val)
-    print(hex(tb.jtag.ret_val))
-    x = await tb.jtag.send_val('DMI', val)
-    print(hex(tb.jtag.ret_val))
-    x = await tb.jtag.send_val('DMI', 0x0c00000021)
-#     x = await tb.jtag.write_val('DMI', 0x0000000001)
-#     x = await tb.jtag.read_val('DMI')
+    await tb.write_dmi(0x4, 0x12345)
+    await tb.read_dmi(0x4)
+
+#     op = 1
+#     addr = 1
+#     data = 1
+#     val = (addr << 34) + (data << 2) + op
+#     print(hex(val))
+#     await tb.jtag.send_val('DMI', val)
+#     await tb.jtag.send_val('DMI', val)
+#     print(hex(tb.jtag.ret_val))
+    
+#     x = await tb.jtag.send_val('DMI', val)
+#     print(hex(tb.jtag.ret_val))
+#     x = await tb.jtag.send_val('DMI', 0x0c00000021)
+# #     x = await tb.jtag.write_val('DMI', 0x0000000001)
+# #     x = await tb.jtag.read_val('DMI')
     await tb.jtag.wait_clkn(5)
     
 #     await tb.jtag.read_val(0x53817905, 'IDCODE')

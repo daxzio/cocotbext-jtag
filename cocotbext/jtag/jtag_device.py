@@ -34,8 +34,6 @@ class JTAGReg:
         if address is None:
             if "BYPASS" == name:
                 self.address = (2**self.ir_len) - 1
-            elif "IDCODE" == name:
-                self.address = (2**self.ir_len) - 2
 
     def __str__(self):
         addrpad = ceil(self.ir_len / 4)
@@ -55,7 +53,6 @@ class JTAGDevice:
         self.names = {}
         self.addresses = {}
         if init:
-            self.add_jtag_reg("IDCODE", 32)
             self.add_jtag_reg("BYPASS", 1)
         self._ir_val_prev = None
         self.idle_delay = 0
@@ -66,6 +63,11 @@ class JTAGDevice:
         width,
         address=None,
     ):
+        if not address is None:
+            if address >= 2**self.ir_len:
+                raise Exception(
+                    f"Address supplied for {name}, {hex(address)}, is out of range possible for ir_len {self.ir_len}"
+                )
         jr = JTAGReg(name, width, address, self.ir_len)
         self.names[jr.name] = jr
         self.addresses[jr.address] = jr

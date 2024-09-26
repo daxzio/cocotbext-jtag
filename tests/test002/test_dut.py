@@ -13,18 +13,21 @@ from cocotbext.jtag import JTAGBus
 class J1JTAGDevice(JTAGDevice):
     def __init__(self, name='jtaglet1', idcode=0x53817905, ir_len=4):
         super().__init__(name, idcode, ir_len)
+        self.add_jtag_reg("IDCODE", 32, 0xe)
         self.add_jtag_reg('USERDATA', 32, 0x8)
         self.add_jtag_reg('USEROP', 8, 0x9)
 
 class J2JTAGDevice(JTAGDevice):
     def __init__(self, name='jtaglet3', idcode=0xc8215c33, ir_len=5):
         super().__init__(name, idcode, ir_len)
+        self.add_jtag_reg("IDCODE", 32, 0x1e)
         self.add_jtag_reg('USERDATA', 32, 0x8)
         self.add_jtag_reg('USEROP', 8, 0x9)
 
 class J3JTAGDevice(JTAGDevice):
     def __init__(self, name='jtaglet3', idcode=0xa92434cf, ir_len=4):
         super().__init__(name, idcode, ir_len)
+        self.add_jtag_reg("IDCODE", 32, 0xe)
         self.add_jtag_reg('USERDATA', 32, 0x8)
         self.add_jtag_reg('USEROP', 8, 0x9)
 

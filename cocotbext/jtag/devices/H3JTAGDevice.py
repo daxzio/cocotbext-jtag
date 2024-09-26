@@ -6,5 +6,6 @@ class H3JTAGDevice(JTAGDevice):
         super().__init__(name, idcode, ir_len)
         self.add_jtag_reg("IDCODE", 32, 0x1)
         self.add_jtag_reg("DTMCS", 32, 0x10)
+        #         self.add_jtag_reg("MENTAL", 32, 0x20)
         self.add_jtag_reg("DMI", 41, 0x11)
         self.idle_delay = 6
