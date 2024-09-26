@@ -210,6 +210,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.tx_fsm.ir_len = self.total_ir_len
         self.tx_fsm.dr_val = self.total_dr_val
         self.tx_fsm.dr_len = self.total_dr_len
+        self.tx_fsm.idle_delay = self.active_device.idle_delay
         self.tx_fsm.write = self.write
         self.tx_fsm.explict_ir = self.explict_ir
         self.tx_fsm.start = True
@@ -256,6 +257,10 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def read_val(self, addr, val=None, device=0):
         await self.send_val(addr, val, device, write=False)
+        return self.ret_val
+
+    async def shift_dr(self):
+        await self.send_val(addr=None, val=None, device=0, write=False)
         return self.ret_val
 
     async def reset_finished(self):

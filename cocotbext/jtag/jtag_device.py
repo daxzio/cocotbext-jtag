@@ -58,6 +58,7 @@ class JTAGDevice:
             self.add_jtag_reg("IDCODE", 32)
             self.add_jtag_reg("BYPASS", 1)
         self._ir_val_prev = None
+        self.idle_delay = 0
 
     def add_jtag_reg(
         self,

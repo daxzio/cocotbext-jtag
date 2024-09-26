@@ -7,3 +7,4 @@ class H3JTAGDevice(JTAGDevice):
         self.add_jtag_reg("IDCODE", 32, 0x1)
         self.add_jtag_reg("DTMCS", 32, 0x10)
         self.add_jtag_reg("DMI", 41, 0x11)
+        self.idle_delay = 6

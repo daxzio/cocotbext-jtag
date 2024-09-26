@@ -53,6 +53,8 @@ class JTAGTxSm:
 
     def reset_state(self):
         self.state = "TEST_LOGIC_RESET"
+        self.idle_delay = 0
+        self.idle_cnt = 0
         self.ir_len = 0
         self.ir_val = 0
         self.ir_pause = 0
@@ -93,14 +95,15 @@ class JTAGTxSm:
                 self.bus.tms.value = False
         elif self.state == "RUN_TEST_IDLE":
             self.finished = False
-            self.state = "SELECT_DR"
-            self.bus.tms.value = True
+            #print(self.idle_delay)
+            self.idle_delay = max(self.idle_delay-1, 0)
+            if self.idle_delay <= 0:
+                self.state = "SELECT_DR"
+                self.bus.tms.value = True
+            else:
+                self.state = "RUN_TEST_IDLE"
+                self.bus.tms.value = False
             self.start = False
-            #             if start_tx:
-            #                 self.state = "SELECT_DR"
-            #                 self.bus.tms.value = True
-            #             else:
-            #                 self.bus.tms.value = False
             self.bus.tdi.value = False
         elif self.state == "SELECT_DR":
             if not self.explict_ir and (self.ir_val == self.ir_val_prev):
