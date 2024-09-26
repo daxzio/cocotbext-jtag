@@ -58,7 +58,7 @@ async def test_idcodes(dut):
     await tb.jtag.read_idcode(2)
 
     tb.jtag.explict_ir = True
-    await tb.jtag.read_val('IDCODE', 0xa92434c4, 2)
+    await tb.jtag.read_val('IDCODE', 0xa92434cf, 2)
     await tb.jtag.read_val('IDCODE', 0xc8215c33, 1)
     await tb.jtag.read_val('IDCODE', 0x53817905, 0)
     
