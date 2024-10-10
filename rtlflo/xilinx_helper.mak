@@ -17,6 +17,19 @@ CADENCE_VLOG?=ncvlog
 CADENCE_VHDL?=ncvhdl
 endif
 
+ifneq (${USE_CDS},)
+    ifeq ($(SIM),xcelium)
+		COMPILE_ARGS += -cdslib ${CDSLIB}
+	else ifeq ($(SIM),ius)
+		COMPILE_ARGS += -cdslib ${CDSLIB}
+    else ifeq ($(SIM),verilator)
+# 	    COMPILE_ARGS += --top-module glbl
+# 		VERILOG_SOURCES += \
+# 			${XILINX_BASE}/verilog/src/glbl.v
+# 	    VERILOG_SOURCES += ${UNISIMS} 
+    endif
+endif
+
 ifneq (${XILINX_BASE},)
 	UNISIMS_VER_CNT=`grep -s unisims_ver ${CDSLIB} | wc -l`
 	UNISIMS_VHDL_CNT=`grep -s unisim ${CDSLIB} | wc -l`
@@ -41,17 +54,15 @@ ifneq (${XILINX_BASE},)
 	    ${XILINX_BASE}/verilog/src/unisims/MMCME2_ADV.v 
     
     ifeq ($(SIM), icarus)
-        ifneq ($(XILINX_IP_SOURCES),)
+        ifneq ($(XILINX_SIM_SOURCES),)
 			COMPILE_ARGS += -y${XILINX_BASE}/verilog/src/unisims
 			COMPILE_ARGS += -s glbl
 		endif
 	else ifeq ($(SIM),xcelium)
-		COMPILE_ARGS += -cdslib ${CDSLIB}
 		COMPILE_ARGS += -top glbl
 		VERILOG_SOURCES += \
 			${XILINX_BASE}/verilog/src/glbl.v
 	else ifeq ($(SIM),ius)
-		COMPILE_ARGS += -cdslib ${CDSLIB}
         ifneq (${VERILOG_SOURCES},)
 		    COMPILE_ARGS += -top glbl
 		    VERILOG_SOURCES += \
@@ -119,8 +130,23 @@ all_libs:: xilinx_library
 
 all_libs_clean:: xilinx_library_clean
 
-#FPGA_DESIGN += ${XILINX_SYNTH_SOURCES} ${RTL_SOURCES} ${IMPORT_SOURCES}
-FPGA_DESIGN = ${XILINX_SYNTH_SOURCES} ${RTL_SOURCES} ${IMPORT_SOURCES} ${VHDL_SOURCES}
+# FPGA_DESIGN = ${XILINX_SYNTH_SOURCES} ${RTL_SOURCES} ${IMPORT_SOURCES} ${VHDL_SOURCES}
+FPGA_DESIGN:=\
+    ${XILINX_SYNTH_SOURCES} \
+    ${INT_VERILOG_SOURCES} \
+    ${EXT_VERILOG_SOURCES} \
+    ${INT_VHDL_SOURCES} \
+    ${EXT_VHDL_SOURCES}
+    
+VERILOG_DESIGN?=\
+    ${INT_VERILOG_SOURCES} \
+    ${SIM_VERILOG_SOURCES} \
+    ${EXT_VERILOG_SOURCES} \
+    ${XILINX_SIM_SOURCES}
+
+VERILOG_SOURCES?=\
+    ${VERILOG_DESIGN} \
+    ${COCOTB_SOURCES}
 
 
 vivado_build:
@@ -135,12 +161,18 @@ vivado_build:
 		${RTLFLO_PATH}/vivado_helper.py
     
 git_xilinx:
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.ip_user_files/ip/*/*_sim_netlist.v -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.srcs/sources_1/ip/*.xcix
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.xpr
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.ip_user_files/ip/*/*_sim_netlist.v -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.srcs/sources_1/ip/*.xcix
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.xpr
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.ip_user_files/ip/*/*_sim_netlist.v -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.srcs/sources_1/ip/*.xcix
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.xpr
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.ip_user_files/ip/*/*_sim_netlist.v -f -N --ignore-errors
+	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.runs/*/*_sim_netlist.v -f
+	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.srcs/sources_1/ip/*.xci* -f
+	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.xpr -f
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.ip_user_files/ip/*/*_sim_netlist.v -f --ignore-errors
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.gen/sources_1/ip/*/*_sim_netlist.v -f
+	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.runs/*/*_sim_netlist.v -f
+	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.srcs/sources_1/ip/*.xci* -f
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.srcs/sources_1/ip/*.prj -f
+	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.xpr -f
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.ip_user_files/ip/*/*_sim_netlist.v -f --ignore-errors
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.runs/*/*_sim_netlist.v -f --ignore-errors
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.srcs/sources_1/ip/*.xcix -f --ignore-errors
+# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.xpr -f --ignore-errors
+

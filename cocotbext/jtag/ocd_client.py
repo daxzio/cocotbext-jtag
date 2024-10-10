@@ -1,0 +1,141 @@
+import socket
+import logging
+from random import seed, randint
+
+from cocotb import start_soon
+from cocotb.triggers import Timer
+
+from .version import __version__
+from .cocotbext_logger import CocoTBExtLogger
+
+class OpenOCDClient:
+    TCP_SIZE = 256
+    
+    def __init__(self, bus, log, host='localhost', port=9999, period=1000, units="ns",):
+        self.bus = bus
+        self.log = log
+        self.host = host
+        self.port = port
+        self.period = period
+        self.units = units
+        self.rxbuf = b''
+        self.txbuf = b''
+        self.finish = False
+                    
+        self.bus.tdi.value = False
+        self.bus.tms.value = False
+        self.bus.tck.value = False
+
+    def start_socket(self):
+        self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.serversocket.bind((self.host, self.port))
+        self.serversocket.listen(5)
+        
+        self.connection, self.address = self.serversocket.accept()
+        
+    def stop_socket(self):
+#         self.send_tx()
+        self.serversocket.shutdown(socket.SHUT_RDWR)
+        self.serversocket.close()
+        
+    def clear_tx(self):
+        self.txbuf = b''
+
+    def recv_rx(self):
+        if not hasattr(self, 'connection'):
+            raise Exception()
+        self.rxbuf = self.connection.recv(self.TCP_SIZE)
+        self.log.debug(f" rxbuf: {self.rxbuf}")
+
+    def send_tx(self):
+        if not 0 == len(self.txbuf):
+            self.connection.send(self.txbuf)
+            self.log.debug(f" txbuf: {self.txbuf}")
+            self.clear_tx()
+
+#     async def listen(self):
+#         while True:
+#             self.recv_rx()
+
+    async def parse(self):
+        while True:
+            self.recv_rx()
+            for c in self.rxbuf:
+                c = chr(c)
+                step = 0
+                if 'r' == c or 's' == c:
+#                     print(f"{c} trst reset true")
+                    if hasattr(self.bus, "trst"):
+                        self.bus.trst.value = False
+                        step = 1
+                elif 't' == c or 'u' == c:
+                    print(f"{c} trst reset false")
+                    raise
+                elif c >= '0' and c <= '7':
+                    mask = ord(c) - ord('0')
+                    self.bus.tdi.value = ((mask >> 0) & 0x1)
+                    self.bus.tms.value = ((mask >> 1) & 0x1)
+                    self.bus.tck.value = ((mask >> 2) & 0x1)
+                    step = 1
+                elif 'R' == c:
+                    if 'x' == self.bus.tdo.value:
+                        tdo = b'0'
+                    else:
+                        tdo = str(int(self.bus.tdo.value)).encode()
+                    self.txbuf += tdo
+                    if len(self.txbuf) >= self.TCP_SIZE:
+                        raise
+                        self.send_tx()
+                elif 'Q' == c:
+                    print(f"{c} OpenOCD sent quit command")
+                    self.stop_socket()
+                    self.finish = True
+                    return
+                elif 'B' == c:
+                    step = randint(0, 8)
+                    step = 2
+                elif 'b' == c:
+                    step = randint(0, 8)
+                    step = 2
+                else:
+                    print(f"{c} not implemented")
+                    raise
+
+                while not 0 == step:
+                    await Timer(self.period/2, units=self.units)
+                    step -= 1
+                
+            self.send_tx()
+
+class OCDDriver(CocoTBExtLogger):
+    def __init__(
+        self,
+        bus,
+        host='localhost',
+        port=9999,
+        period=1000,
+        units="ns",
+        logging_enabled=True,
+    ):
+        CocoTBExtLogger.__init__(
+            self, type(self).__name__, logging_enabled, start_year=2024
+        )
+        seed(5)
+        self.log.setLevel(logging.INFO)
+        self.host = host
+        self.port = port
+        self.period = period
+        self.units = units
+        self.frequency = 1000_000_000 / self.period
+
+        self.log.info("JTAG Driver")
+        self.log.info(f"cocotbext-jtag version {__version__}")
+        self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
+        self.log.info("https://github.com/daxzio/cocotbext-jtag")
+        self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
+
+        self.bus = bus
+        
+        self.ocd = OpenOCDClient(self.bus, self.log, self.host, self.port, self.period, self.units)
+        self.ocd.start_socket()
+

@@ -28,6 +28,7 @@ from .jtag_driver import JTAGDriver
 from .jtag_monitor import JTAGMonitor
 from .jtag_bus import JTAGBus
 from .jtag_device import JTAGDevice
+from .ocd_client import OCDDriver
 
 __all__ = [
     "__version__",
@@ -35,4 +36,5 @@ __all__ = [
     "JTAGMonitor",
     "JTAGBus",
     "JTAGDevice",
+    "OCDDriver",
 ]
