@@ -24,26 +24,23 @@ class testbench:
         self.jtag = JTAGDriver(bus)
         self.jtag.add_device(J1JTAGDevice())
 #         self.jtag.log.setLevel(logging.DEBUG)
-#         self.jtag.random_pause = True
         
 #         self.jtag_mon = JTAGMonitor(bus)
 #         self.jtag_mon.log.setLevel(logging.DEBUG)
 
         
-# @test()
-# async def test_fsm_reset(dut):
-#     tb = testbench(dut)
-#     await tb.jtag.set_reset(400)
-#     await tb.jtag.wait_clkn(20)
-# #     await tb.jtag.reset_fsm()
-# #     await tb.jtag.wait_clkn(20)
-# #     tb.jtag.random_pause = True
-#     await tb.jtag.read_val(0x53817905, 'IDCODE')
-#     await tb.jtag.read_val(0x53817905, 'IDCODE')
-#     await tb.jtag.wait_clkn(20)
-# #     await tb.jtag.read_idcode()
-# #     await tb.jtag.wait_clkn(20)
-#     
+@test()
+async def test_fsm_reset(dut):
+    tb = testbench(dut)
+    await tb.jtag.wait_clkn(20)
+    await tb.jtag.reset_fsm(7)
+    await tb.jtag.wait_clkn(20)
+    
+    await tb.jtag.shift_dr(val=0x53817905)
+    
+
+    await tb.jtag.wait_clkn(20)
+    
 @test()
 async def test_repeat(dut):
     

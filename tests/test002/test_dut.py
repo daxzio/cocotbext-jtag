@@ -49,6 +49,12 @@ class testbench:
 # async def test_fsm_reset(dut):
 #     tb = testbench(dut)
 #     await tb.jtag.wait_clkn(20)
+#     await tb.jtag.reset_fsm()
+#     await tb.jtag.wait_clkn(20)
+#     
+#     await tb.jtag.shift_dr(val=0x53817905)
+#     
+#     await tb.jtag.wait_clkn(20)
 
 @test()
 async def test_idcodes(dut):

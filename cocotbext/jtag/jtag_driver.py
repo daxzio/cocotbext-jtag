@@ -53,18 +53,21 @@ class JTAGDriver(CocoTBExtLogger):
         self.period = period
         self.units = units
         self.frequency = 1000_000_000 / self.period
+        self.bus = bus
 
         self.log.info("JTAG Driver")
         self.log.info(f"cocotbext-jtag version {__version__}")
         self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
+        if hasattr(self.bus, "trst"):
+            self.log.info("    JTAG Reset is present")
+        else:
+            self.log.info("    JTAG Reset is not present")
 
-        self.bus = bus
         self.tx_fsm = JTAGTxSm(self.bus, randint(0, 0xFFFF))
         self.rx_fsm = JTAGRxSm(self.bus)
 
-        # start_soon(Clock(self.bus.tck, self.period, units=units).start())
         self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False)
         start_soon(self.gc.start(start_high=False))
 
@@ -76,10 +79,8 @@ class JTAGDriver(CocoTBExtLogger):
                 reset_length=10 * self.period,
                 units=self.units,
             )
-            self.log.info("    JTAG Reset is present")
-        else:
-            self.log.info("    JTAG Reset is not present")
-        self.bus.tms.setimmediatevalue(0)
+
+        self.bus.tms.setimmediatevalue(1)
         self.bus.tdi.setimmediatevalue(0)
 
         self.explict_ir = False
@@ -111,13 +112,6 @@ class JTAGDriver(CocoTBExtLogger):
     def active_device(self):
         return self.devices[self.device]
 
-    #     @property
-    #     def total_ir_len(self):
-    #         total = 0
-    #         for d in self.devices:
-    #             total += d.ir_len
-    #         return total
-
     def add_device(self, device):
         self.devices.append(device)
 
@@ -136,7 +130,6 @@ class JTAGDriver(CocoTBExtLogger):
     async def _jtag_fsm(self):
         while True:
             await RisingEdge(self.bus.tck)
-            #             self.log.debug(f"{self.rx_fsm.state} {self.rx_fsm.dr_pause}")
             self.rx_fsm.update_state()
 
     async def _parse_tdo(self):
@@ -156,12 +149,11 @@ class JTAGDriver(CocoTBExtLogger):
                             f"Expected: 0x{self.dr_val:08x} Returned: 0x{self.ret_val:08x}"
                         )
 
-    async def reset_fsm(self):
+    async def reset_fsm(self, num=5):
         self.clock_gated = True
         self.bus.tms.value = 1
-        for i in range(5):
+        for i in range(num):
             await FallingEdge(self.bus.tck)
-        # self.bus.tms.value = 0
         self.clock_gated = False
 
     async def send_val(self, addr, val=None, device=0, write=True):
@@ -171,11 +163,16 @@ class JTAGDriver(CocoTBExtLogger):
             addr = self.active_device.names[addr].address
         elif isinstance(addr, int):
             addr = addr
+        elif addr is None:
+            addr = addr
         else:
             raise Exception(f"Unknown format for addr: {addr}")
 
         self.ir_val = addr
-        self.dr_len = self.active_device.addresses[addr].width
+        if addr is None:
+            self.dr_len = self.shift_dr_num
+        else:
+            self.dr_len = self.active_device.addresses[addr].width
         self.dr_val = val
         if val is None:
             self.total_dr_val = None
@@ -184,32 +181,36 @@ class JTAGDriver(CocoTBExtLogger):
         self.total_dr_len = self.dr_len + len(self.devices) - 1
 
         if not self.suppress_log:
-            #             irpad = ceil(self.active_device.ir_len / 4)
             drpad = ceil(self.dr_len / 4)
             exp = ""
             if not self.dr_val is None:
                 exp = f" Expected: 0x{self.dr_val:0{drpad}x}"
-            if self.write:
-                self.log.info(
-                    f"Device: {self.device} - Addr: {hex(self.ir_val):>6}    Write: 0x{self.dr_val:0{drpad}x}"
-                )
-            else:
-                self.log.info(
-                    f"Device: {self.device} - Addr: {hex(self.ir_val):>6}{exp}"
-                )
+            if not self.ir_val is None:
+                if self.write:
+                    self.log.info(
+                        f"Device: {self.device} - Addr: {hex(self.ir_val):>6}    Write: 0x{self.dr_val:0{drpad}x}"
+                    )
+                else:
+                    self.log.info(
+                        f"Device: {self.device} - Addr: {hex(self.ir_val):>6}{exp}"
+                    )
 
         self.total_ir_len = 0
         self.total_ir_val = 0
-        for i, d in reversed(list(enumerate(self.devices))):
-            if i == device:
-                v = self.ir_val
-            else:
-                v = self.devices[i].names["BYPASS"].address
-            self.total_ir_val += v << self.total_ir_len
-            self.total_ir_len += d.ir_len
+        if not addr is None:
+            for i, d in reversed(list(enumerate(self.devices))):
+                if i == device:
+                    v = self.ir_val
+                else:
+                    v = self.devices[i].names["BYPASS"].address
+                self.total_ir_val += v << self.total_ir_len
+                self.total_ir_len += d.ir_len
 
-        self.tx_fsm.ir_val = self.total_ir_val
-        self.tx_fsm.ir_len = self.total_ir_len
+            self.tx_fsm.ir_val = self.total_ir_val
+            self.tx_fsm.ir_len = self.total_ir_len
+        else:
+            self.tx_fsm.ir_val = addr
+            self.tx_fsm.ir_len = 0
         self.tx_fsm.dr_val = self.total_dr_val
         self.tx_fsm.dr_len = self.total_dr_len
         self.tx_fsm.idle_delay = self.active_device.idle_delay
@@ -235,7 +236,6 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.dr_val_out = 0
         while not self.tx_fsm.finished:
-            #             self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_pause} {self.tx_fsm.dr_delay}")
             if "SHIFT_IR" == self.tx_fsm.state:
                 self.log.debug(
                     f"{self.tx_fsm.state} {self.tx_fsm.ir_len} {self.tx_fsm.ir_pause} {self.tx_fsm.ir_delay}"
@@ -261,8 +261,9 @@ class JTAGDriver(CocoTBExtLogger):
         await self.send_val(addr, val, device, write=False)
         return self.ret_val
 
-    async def shift_dr(self):
-        await self.send_val(addr=None, val=None, device=0, write=False)
+    async def shift_dr(self, num=32, val=None, device=0):
+        self.shift_dr_num = num
+        await self.send_val(addr=None, val=val, device=device, write=False)
         return self.ret_val
 
     async def read_idcode(self, device=0):
