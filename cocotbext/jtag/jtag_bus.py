@@ -36,11 +36,13 @@ class JTAGBus(Bus):
         "trst",
     ]
 
-    def __init__(self, entity=None, prefix=None, **kwargs):
+    def __init__(self, entity=None, prefix=None, signals=_signals, **kwargs):
+#         if signals is None:
+#             signals = self._signals
         super().__init__(
             entity,
             prefix,
-            self._signals,
+            signals,
             optional_signals=self._optional_signals,
             **kwargs,
         )

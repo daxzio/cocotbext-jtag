@@ -3,6 +3,7 @@ SIM?=icarus
 default:
 	cd tests/test001 ; make clean sim ; ../../rtlflo/combine_results.py
 	cd tests/test002 ; make clean sim ; ../../rtlflo/combine_results.py
+	cd tests/test003 ; make clean sim ; ../../rtlflo/combine_results.py
 	cd tests/hazard3 ; make clean sim ; ../../rtlflo/combine_results.py
 
 lint:
