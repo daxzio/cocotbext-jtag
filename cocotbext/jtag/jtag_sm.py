@@ -23,6 +23,7 @@ THE SOFTWARE.
 """
 
 from random import seed, randint
+from .jtag_bus import JTAGBus
 
 # from enum import Enum
 # class JTAGState(Enum):
@@ -45,7 +46,7 @@ from random import seed, randint
 
 
 class JTAGTxSm:
-    def __init__(self, bus, iseed=9):
+    def __init__(self, bus: JTAGBus, iseed: int = 9) -> None:
         self.reset_state()
         self.bus = bus
         self.seed = iseed
@@ -69,7 +70,7 @@ class JTAGTxSm:
         self.explict_ir = False
         self.start = False
 
-    def gen_ir_random(self, random=False):
+    def gen_ir_random(self, random: bool = False) -> None:
         self.ir_pause = 0
         self.ir_delay = 0
         if random:
@@ -77,7 +78,7 @@ class JTAGTxSm:
                 self.ir_pause = randint(0, self.ir_len) + 1
                 self.ir_delay = randint(0, 4) + 1
 
-    def gen_dr_random(self, random=False):
+    def gen_dr_random(self, random: bool = False) -> None:
         self.dr_pause = 0
         self.dr_delay = 0
         if random:
@@ -85,7 +86,7 @@ class JTAGTxSm:
                 self.dr_pause = randint(0, self.dr_len) + 1
                 self.dr_delay = randint(0, 7) + 1
 
-    def update_state(self):
+    def update_state(self) -> None:
 
         if self.state == "TEST_LOGIC_RESET":
             self.finished = False
@@ -215,14 +216,11 @@ class JTAGTxSm:
 
 
 class JTAGRxSm:
-    def __init__(self, bus):
+    def __init__(self, bus: JTAGBus) -> None:
         self.reset_state()
         self.bus = bus
 
-    #         self.seed = iseed
-    #         seed(self.seed)
-
-    def reset_state(self):
+    def reset_state(self) -> None:
         self.state = "TEST_LOGIC_RESET"
         self.dr_cnt = 0
         self.dr_val_in = 0
@@ -230,7 +228,7 @@ class JTAGRxSm:
         self.ir_cnt = 0
         self.ir_val_in = 0
 
-    def update_state(self):
+    def update_state(self) -> None:
 
         if self.state == "TEST_LOGIC_RESET" or self.state == "RUN_TEST_IDLE":
             self.dr_cnt = 0
@@ -252,7 +250,6 @@ class JTAGRxSm:
             self.dr_cnt += 1
         elif self.state == "UPDATE_DR":
             pass
-        #             print(f"dr cnt {self.dr_cnt} 0x{self.dr_val_in:08x} 0x{self.dr_val_out:08x}")
         elif self.state == "CAPTURE_IR":
             self.ir_cnt = 0
             self.ir_val_in = 0
@@ -261,7 +258,6 @@ class JTAGRxSm:
             self.ir_cnt += 1
         elif self.state == "UPDATE_IR":
             pass
-        #             print(f"ir_cnt {self.ir_cnt} 0x{self.ir_val_in:08x}")
 
         if self.state == "TEST_LOGIC_RESET":
             if not self.bus.tms.value:
