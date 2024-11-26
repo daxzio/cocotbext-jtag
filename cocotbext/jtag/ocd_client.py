@@ -127,14 +127,18 @@ class OCDDriver(CocoTBExtLogger):
         self.period = period
         self.units = units
         self.frequency = 1000_000_000 / self.period
+        self.bus = bus
 
-        self.log.info("JTAG Driver")
+        self.log.info("OpenOCD JTAG Driver")
         self.log.info(f"cocotbext-jtag version {__version__}")
         self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
+        if hasattr(self.bus, "trst"):
+            self.log.info("    JTAG Reset is present")
+        else:
+            self.log.info("    JTAG Reset is not present")
 
-        self.bus = bus
         
         self.ocd = OpenOCDClient(self.bus, self.log, self.host, self.port, self.period, self.units)
         self.ocd.start_socket()
