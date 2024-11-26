@@ -67,7 +67,8 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.tx_fsm = JTAGTxSm(self.bus, randint(0, 0xFFFF))
         self.rx_fsm = JTAGRxSm(self.bus)
-
+        self.ret_val = None
+        
         self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False)
         start_soon(self.gc.start(start_high=False))
 
@@ -80,9 +81,12 @@ class JTAGDriver(CocoTBExtLogger):
                 units=self.units,
             )
 
-        self.bus.tms.setimmediatevalue(1)
-        self.bus.tdi.setimmediatevalue(0)
+#         self.bus.tms.setimmediatevalue(1)
+#         self.bus.tdi.setimmediatevalue(0)
 
+        self.bus.tms.value = True
+        self.bus.tdi.value = False
+        
         self.explict_ir = False
         self.suppress_log = False
         self.random_pause = False
@@ -263,7 +267,10 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def shift_dr(self, num=32, val=None, device=0):
         self.shift_dr_num = num
+        self.ret_val = None
         await self.send_val(addr=None, val=val, device=device, write=False)
+        if self.ret_val is None:
+            raise
         return self.ret_val
 
     async def read_idcode(self, device=0):
