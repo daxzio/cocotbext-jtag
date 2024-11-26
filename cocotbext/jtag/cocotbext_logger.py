@@ -27,7 +27,9 @@ from datetime import datetime
 
 
 class CocoTBExtLogger:
-    def __init__(self, name="default", enable=True, start_year=2023):
+    def __init__(
+        self, name: str = "default", enable: bool = True, start_year: int = 2023
+    ) -> None:
         current_year = datetime.now().year
         if start_year == current_year:
             self.copyright_year = f"{start_year}"
@@ -38,7 +40,7 @@ class CocoTBExtLogger:
         if enable:
             self.enable_logging()
 
-    def siunits(self, value):
+    def siunits(self, value: int | float) -> str:
         if value >= 1000_000:
             return f"{value/1000000} M"
         elif value >= 1000:
@@ -46,8 +48,8 @@ class CocoTBExtLogger:
         else:
             return f"{value} "
 
-    def enable_logging(self):
+    def enable_logging(self) -> None:
         self.log.setLevel(logging.DEBUG)
 
-    def disable_logging(self):
+    def disable_logging(self) -> None:
         self.log.setLevel(logging.WARNING)

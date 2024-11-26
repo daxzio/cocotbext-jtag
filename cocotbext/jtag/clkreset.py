@@ -26,13 +26,11 @@ from cocotb.clock import Clock
 from cocotb import start_soon
 from cocotb.triggers import RisingEdge, Timer
 
-# from cocotb.handle import ModifiableObject
-
 
 class Clk:
-    def __init__(self, dut, period=10, units="ns", clkname="clk"):
-        #         print(clkname)
-        #         self.clk = getattr(dut, clkname)
+    def __init__(
+        self, dut, period: int = 10, units: str = "ns", clkname: str = "clk"
+    ) -> None:
         try:
             self.clk = getattr(dut, clkname)
         except AttributeError:
@@ -41,7 +39,7 @@ class Clk:
         self.period = period
         start_soon(Clock(self.clk, self.period, units=units).start())
 
-    async def wait_clkn(self, length=1):
+    async def wait_clkn(self, length: int = 1) -> None:
         for i in range(int(length)):
             await RisingEdge(self.clk)
 

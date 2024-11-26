@@ -244,7 +244,7 @@ class JTAGRxSm:
             self.dr_val_out = 0
         elif self.state == "SHIFT_DR":
             self.dr_val_in += int(self.bus.tdi.value) << self.dr_cnt
-            if 'x' == self.bus.tdo.value:
+            if "x" == self.bus.tdo.value:
                 tdo = 0
             else:
                 tdo = int(self.bus.tdo.value)

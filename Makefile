@@ -9,6 +9,9 @@ default:
 lint:
 	pyflakes cocotbext
 
+mypy:
+	mypy cocotbext
+
 format:
 	black cocotbext
 

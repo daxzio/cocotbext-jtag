@@ -2,99 +2,109 @@ import socket
 import logging
 from random import seed, randint
 
-from cocotb import start_soon
 from cocotb.triggers import Timer
 
 from .version import __version__
+from logging import Logger
 from .cocotbext_logger import CocoTBExtLogger
+from .jtag_bus import JTAGBus
+
 
 class OpenOCDClient:
     TCP_SIZE = 256
-    
-    def __init__(self, bus, log, host='localhost', port=9999, period=1000, units="ns",):
+
+    def __init__(
+        self,
+        bus: JTAGBus,
+        log: Logger,
+        host: str = "localhost",
+        port: int = 9999,
+        period: int = 1000,
+        units: str = "ns",
+    ) -> None:
         self.bus = bus
         self.log = log
         self.host = host
         self.port = port
         self.period = period
         self.units = units
-        self.rxbuf = b''
-        self.txbuf = b''
+        self.rxbuf = b""
+        self.txbuf = b""
         self.finish = False
-                    
+
         self.bus.tdi.value = False
         self.bus.tms.value = False
         self.bus.tck.value = False
 
-    def start_socket(self):
+    def start_socket(self) -> None:
         self.serversocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.serversocket.bind((self.host, self.port))
         self.serversocket.listen(5)
-        
+
         self.connection, self.address = self.serversocket.accept()
-        
-    def stop_socket(self):
-#         self.send_tx()
+
+    def stop_socket(self) -> None:
+        #         self.send_tx()
         self.serversocket.shutdown(socket.SHUT_RDWR)
         self.serversocket.close()
-        
-    def clear_tx(self):
-        self.txbuf = b''
 
-    def recv_rx(self):
-        if not hasattr(self, 'connection'):
+    def clear_tx(self) -> None:
+        self.txbuf = b""
+
+    def recv_rx(self) -> None:
+        if not hasattr(self, "connection"):
             raise Exception()
         self.rxbuf = self.connection.recv(self.TCP_SIZE)
-        self.log.debug(f" rxbuf: {self.rxbuf}")
+        self.log.debug(f" rxbuf: {self.rxbuf!r}")
 
-    def send_tx(self):
+    def send_tx(self) -> None:
         if not 0 == len(self.txbuf):
             self.connection.send(self.txbuf)
-            self.log.debug(f" txbuf: {self.txbuf}")
+            self.log.debug(f" txbuf: {self.txbuf!r}")
             self.clear_tx()
 
-#     async def listen(self):
-#         while True:
-#             self.recv_rx()
+    #     async def listen(self):
+    #         while True:
+    #             self.recv_rx()
 
-    async def parse(self):
+    async def parse(self) -> None:
         while True:
             self.recv_rx()
-            for c in self.rxbuf:
-                c = chr(c)
+            for x in self.rxbuf:
+                c = chr(x)
                 step = 0
-                if 'r' == c or 's' == c:
-#                     print(f"{c} trst reset true")
+                if "r" == c or "s" == c:
+                    #                     print(f"{c} trst reset true")
                     if hasattr(self.bus, "trst"):
                         self.bus.trst.value = False
                         step = 1
-                elif 't' == c or 'u' == c:
+                elif "t" == c or "u" == c:
                     print(f"{c} trst reset false")
                     raise
-                elif c >= '0' and c <= '7':
-                    mask = ord(c) - ord('0')
-                    self.bus.tdi.value = ((mask >> 0) & 0x1)
-                    self.bus.tms.value = ((mask >> 1) & 0x1)
-                    self.bus.tck.value = ((mask >> 2) & 0x1)
+                elif c >= "0" and c <= "7":
+                    mask = ord(c) - ord("0")
+                    self.bus.tdi.value = (mask >> 0) & 0x1
+                    self.bus.tms.value = (mask >> 1) & 0x1
+                    self.bus.tck.value = (mask >> 2) & 0x1
                     step = 1
-                elif 'R' == c:
-                    if 'x' == self.bus.tdo.value:
-                        tdo = b'0'
+                elif "R" == c:
+                    if "x" == self.bus.tdo.value:
+                        tdo = b"0"
                     else:
                         tdo = str(int(self.bus.tdo.value)).encode()
                     self.txbuf += tdo
                     if len(self.txbuf) >= self.TCP_SIZE:
                         raise
                         self.send_tx()
-                elif 'Q' == c:
+                elif "Q" == c:
                     print(f"{c} OpenOCD sent quit command")
                     self.stop_socket()
                     self.finish = True
                     return
-                elif 'B' == c:
+                elif "B" == c:
                     step = randint(0, 8)
                     step = 2
-                elif 'b' == c:
+                elif "b" == c:
                     step = randint(0, 8)
                     step = 2
                 else:
@@ -102,21 +112,22 @@ class OpenOCDClient:
                     raise
 
                 while not 0 == step:
-                    await Timer(self.period/2, units=self.units)
+                    await Timer(self.period / 2, units=self.units)
                     step -= 1
-                
+
             self.send_tx()
+
 
 class OCDDriver(CocoTBExtLogger):
     def __init__(
         self,
-        bus,
-        host='localhost',
+        bus: JTAGBus,
+        host="localhost",
         port=9999,
         period=1000,
         units="ns",
         logging_enabled=True,
-    ):
+    ) -> None:
         CocoTBExtLogger.__init__(
             self, type(self).__name__, logging_enabled, start_year=2024
         )
@@ -139,7 +150,7 @@ class OCDDriver(CocoTBExtLogger):
         else:
             self.log.info("    JTAG Reset is not present")
 
-        
-        self.ocd = OpenOCDClient(self.bus, self.log, self.host, self.port, self.period, self.units)
+        self.ocd = OpenOCDClient(
+            self.bus, self.log, self.host, self.port, self.period, self.units
+        )
         self.ocd.start_socket()
-

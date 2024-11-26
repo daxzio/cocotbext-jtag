@@ -21,6 +21,10 @@ jobs:
         continue-on-error: true
         run: |
           pyflakes cocotbext
+      - name: Run Type check
+        continue-on-error: true
+        run: |
+          mypy cocotbext
  
 #   build_ghdl_linux:
 #     #uses: daxzio/setup-eda/.github/workflows/setup_ghdl.yml@main

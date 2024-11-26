@@ -26,32 +26,40 @@ from math import ceil
 
 
 class JTAGReg:
-    def __init__(self, name, width, address=None, ir_len=4):
+    def __init__(
+        self, name: str, width: int, address: int = -1, ir_len: int = 4
+    ) -> None:
         self.name = name
         self.width = width
         self.address = address
         self.ir_len = ir_len
-        if address is None:
+        if -1 == address:
             if "BYPASS" == name:
                 self.address = (2**self.ir_len) - 1
 
-    def __str__(self):
+    def __str__(self) -> str:
         addrpad = ceil(self.ir_len / 4)
         return f"0x{self.address:0{addrpad}x} {self.name} {self.width} {self.ir_len}"
 
 
 class JTAGDevice:
 
-    count = 0
+    count: int = 0
 
-    def __init__(self, name="default", idcode=0x00000001, ir_len=4, init=True):
+    def __init__(
+        self,
+        name: str = "default",
+        idcode: int = 0x00000001,
+        ir_len: int = 4,
+        init: bool = True,
+    ) -> None:
         self.id = self.count
         JTAGDevice.count += 1
-        self.name = name
-        self.idcode = idcode
-        self.ir_len = ir_len
-        self.names = {}
-        self.addresses = {}
+        self.name: str = name
+        self.idcode: int = idcode
+        self.ir_len: int = ir_len
+        self.names: dict = {}
+        self.addresses: dict = {}
         if init:
             self.add_jtag_reg("BYPASS", 1)
         self._ir_val_prev = None
@@ -59,11 +67,11 @@ class JTAGDevice:
 
     def add_jtag_reg(
         self,
-        name,
-        width,
-        address=None,
-    ):
-        if not address is None:
+        name: str,
+        width: int,
+        address: int = -1,
+    ) -> None:
+        if not -1 == address:
             if address >= 2**self.ir_len:
                 raise Exception(
                     f"Address supplied for {name}, {hex(address)}, is out of range possible for ir_len {self.ir_len}"
@@ -72,10 +80,10 @@ class JTAGDevice:
         self.names[jr.name] = jr
         self.addresses[jr.address] = jr
 
-    def print_regs(self):
+    def print_regs(self) -> None:
         print(self)
         for k, v in sorted(self.addresses.items()):
             print(v)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Device: {self.id} {self.name} idcode 0x{self.idcode:08x}"

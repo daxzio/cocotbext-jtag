@@ -26,19 +26,23 @@ from cocotb_bus.bus import Bus
 
 
 class JTAGBus(Bus):
-    _signals = [
+    _signals: list = [
         "tck",
         "tms",
         "tdi",
         "tdo",
     ]
-    _optional_signals = [
+    _optional_signals: list = [
         "trst",
     ]
 
-    def __init__(self, entity=None, prefix=None, signals=_signals, **kwargs):
-#         if signals is None:
-#             signals = self._signals
+    def __init__(
+        self,
+        entity=None,
+        prefix: str | None = None,
+        signals: list | dict = _signals,
+        **kwargs
+    ) -> None:
         super().__init__(
             entity,
             prefix,

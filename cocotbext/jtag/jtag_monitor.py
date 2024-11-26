@@ -5,14 +5,15 @@ from cocotb import start_soon
 from .version import __version__
 from .cocotbext_logger import CocoTBExtLogger
 from .jtag_sm import JTAGRxSm
+from .jtag_bus import JTAGBus
 
 
 class JTAGMonitor(CocoTBExtLogger):
     def __init__(
         self,
-        bus,
-        logging_enabled=True,
-    ):
+        bus: JTAGBus,
+        logging_enabled: bool = True,
+    ) -> None:
         CocoTBExtLogger.__init__(
             self, type(self).__name__, logging_enabled, start_year=2024
         )
@@ -25,11 +26,10 @@ class JTAGMonitor(CocoTBExtLogger):
 
         self.bus = bus
 
-        #         start_soon(self._detect_reset())
         start_soon(self._jtag_fsm())
         start_soon(self._reset())
 
-    async def _reset(self):
+    async def _reset(self) -> None:
         if hasattr(self.bus, "trst"):
             while True:
                 await FallingEdge(self.bus.trst)
@@ -37,7 +37,7 @@ class JTAGMonitor(CocoTBExtLogger):
                 self.fsm.state = "TEST_LOGIC_RESET"
                 await RisingEdge(self.bus.trst)
 
-    async def _detect_reset(self):
+    async def _detect_reset(self) -> None:
         count = 0
         while True:
             await RisingEdge(self.bus.tck)
@@ -48,7 +48,7 @@ class JTAGMonitor(CocoTBExtLogger):
             else:
                 count = 0
 
-    async def _jtag_fsm(self):
+    async def _jtag_fsm(self) -> None:
         self.fsm = JTAGRxSm(self.bus)
         while True:
             await RisingEdge(self.bus.tck)
