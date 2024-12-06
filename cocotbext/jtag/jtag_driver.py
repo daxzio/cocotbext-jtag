@@ -159,6 +159,7 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def reset_fsm(self, num: int = 5) -> None:
         self.clock_gated = True
+        self.tx_fsm.reset_state()
         self.bus.tms.value = 1
         for i in range(num):
             await FallingEdge(self.bus.tck)
@@ -261,13 +262,12 @@ class JTAGDriver(CocoTBExtLogger):
                 self.log.debug(f"{self.tx_fsm.state} {self.tx_fsm.dr_len}")
             else:
                 self.log.debug(f"{self.tx_fsm.state}")
-            self.tx_fsm.update_state()
             await FallingEdge(self.bus.tck)
+            self.tx_fsm.update_state()
 
         self.log.debug(f"{self.tx_fsm.state}")
-        self.tx_fsm.update_state()
         await FallingEdge(self.bus.tck)
-
+        self.tx_fsm.update_state()
         self.clock_gated = False
 
     async def write_val(
