@@ -25,6 +25,7 @@ THE SOFTWARE.
 import logging
 from random import seed, randint
 from math import ceil
+from typing import Union
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import FallingEdge
 from cocotb import start_soon
@@ -96,7 +97,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.devices: list = []
         self.device = 0
         self.dr_len: int = 0
-        self.dr_val: int | None = 0
+        self.dr_val: Union[int, None] = 0
 
         start_soon(self._jtag_fsm())
         start_soon(self._parse_tdo())
@@ -167,8 +168,8 @@ class JTAGDriver(CocoTBExtLogger):
 
     async def send_val(
         self,
-        addr: int | str | None,
-        val: int | None = None,
+        addr: Union[int, str, None],
+        val: Union[int, None] = None,
         device: int = 0,
         write: bool = True,
     ) -> None:
@@ -271,18 +272,20 @@ class JTAGDriver(CocoTBExtLogger):
         self.clock_gated = False
 
     async def write_val(
-        self, addr: int | str | None, val: int | None = None, device: int = 0
+        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
     ) -> None:
         await self.send_val(addr, val, device, write=True)
         self.suppress_log = False
 
     async def read_val(
-        self, addr: int | str | None, val: int | None = None, device: int = 0
+        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
     ):
         await self.send_val(addr, val, device, write=False)
         return self.ret_val
 
-    async def shift_dr(self, num: int = 32, val: int | None = None, device: int = 0):
+    async def shift_dr(
+        self, num: int = 32, val: Union[int, None] = None, device: int = 0
+    ):
         self.shift_dr_num = num
         self.ret_val = None
         await self.send_val(addr=None, val=val, device=device, write=False)

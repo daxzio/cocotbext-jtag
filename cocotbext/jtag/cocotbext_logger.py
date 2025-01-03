@@ -1,6 +1,6 @@
 """
 
-Copyright (c) 2023-2024 Daxzio
+Copyright (c) 2023-2025 Daxzio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -24,6 +24,7 @@ THE SOFTWARE.
 
 import logging
 from datetime import datetime
+from typing import Union
 
 
 class CocoTBExtLogger:
@@ -40,7 +41,7 @@ class CocoTBExtLogger:
         if enable:
             self.enable_logging()
 
-    def siunits(self, value: int | float) -> str:
+    def siunits(self, value: Union[int, float]) -> str:
         if value >= 1000_000:
             return f"{value/1000000} M"
         elif value >= 1000:

@@ -1,6 +1,6 @@
 """
 
-Copyright (c) 2024 Daxzio
+Copyright (c) 2024-2025 Daxzio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -23,6 +23,7 @@ THE SOFTWARE.
 """
 
 from cocotb_bus.bus import Bus
+from typing import Union
 
 
 class JTAGBus(Bus):
@@ -39,8 +40,8 @@ class JTAGBus(Bus):
     def __init__(
         self,
         entity=None,
-        prefix: str | None = None,
-        signals: list | dict = _signals,
+        prefix: Union[str, None] = None,
+        signals: Union[list, dict] = _signals,
         **kwargs
     ) -> None:
         super().__init__(
