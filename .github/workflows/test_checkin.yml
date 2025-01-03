@@ -101,7 +101,7 @@ jobs:
       - if: ${{ matrix.cocotb-version == 'main' }}
         name: Install cocotb from repo
         run: |
-          python -m pip uninstall -y cocotb cocotb-nus
+          python -m pip uninstall -y cocotb cocotb-bus
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
       - name: Run Tests
