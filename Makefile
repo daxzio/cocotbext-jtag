@@ -8,12 +8,15 @@ default:
 
 lint:
 	pyflakes cocotbext
+	ruff check cocotbext
 
 mypy:
 	mypy cocotbext
 
 format:
 	black cocotbext
+
+checks: format lint mypy
 
 dist:
 	rm -rf MANIFEST 
@@ -32,3 +35,8 @@ release:
 	git tag -f v${GIT_TAG}
 	git push && git push --tags
 
+git_align:
+	mkdir -p repos
+	cd repos ; git clone git@github.com:daxzio/rtlflo.git 2> /dev/null || (cd rtlflo ; git pull)
+	rsync -artu --exclude .git repos/rtlflo/ rtlflo
+	rsync -artu --exclude .git rtlflo/ repos/rtlflo

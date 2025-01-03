@@ -97,7 +97,7 @@ class ClkReset:
         resetname="reset",
     ):
         self.clk_freq = clk_freq
-        if not self.clk_freq is None:
+        if self.clk_freq is not None:
             self.period = 1000 / self.clk_freq
         else:
             self.period = period

@@ -155,7 +155,7 @@ class GatedClock(Clock):
         t_high = self.period // 2
 
         if self.impl == "gpi":
-            raise Exception("Unimplemented")
+            #             raise Exception("Unimplemented")
             clkobj = clock_create(self.signal._handle)
             clkobj.start(self.period, t_high, start_high)
 

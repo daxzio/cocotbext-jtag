@@ -34,6 +34,9 @@ class testbench:
 @test()
 async def test_fsm_reset(dut):
     tb = testbench(dut)
+    await tb.jtag.set_reset()
+    await tb.jtag.wait_clkn(20)
+    await tb.jtag.read_val('USERDATA')
     await tb.jtag.wait_clkn(20)
     await tb.jtag.reset_fsm(7)
     await tb.jtag.wait_clkn(20)

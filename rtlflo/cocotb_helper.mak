@@ -1,7 +1,10 @@
 TOPLEVEL_LANG?=verilog
 TOPLEVEL?=dut
-MODULE?=test_dut
+COCOTB_TEST_MODULES?=test_dut
 
+ifeq ($(TOPLEVEL_LANG),verilog)
+    WAVES=1
+endif
 # COCOTB_RESOLVE_X?=ZEROS
 # export COCOTB_RESOLVE_X
 
@@ -20,7 +23,6 @@ include ${WORK_BASE}/rtlflo/git_helper.mak
 # DEFINES += COCOTB_RUNNING=1
 export COCOTB_RUNNING
 ifeq ($(TOPLEVEL_LANG),verilog)
-    WAVES=1
 	ifeq ($(SIM), icarus)
         DEFINES += COCOTB_ICARUS=1
 	else ifeq ($(SIM), ius)
@@ -38,6 +40,11 @@ ifeq ($(TOPLEVEL_LANG),verilog)
 	else ifeq ($(SIM),verilator)
         DEFINES += COCOTB_VERILATOR=1
 		COMPILE_ARGS += --no-timing -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC -Wno-STMTDLY
+# 		COMPILE_ARGS += --public
+# 		COMPILE_ARGS += --public-flat-rw
+# 		COMPILE_ARGS += --public-depth 10 --hierarchical -j 8 --public-flat-rw
+# 	    EXTRA_ARGS += --public-depth 10
+# 		PLUSARGS += --public-depth 10
 	endif
 endif
 
@@ -45,7 +52,7 @@ ifeq ($(WAVES),1)
     DEFINES += COCOTB_WAVES=1
 #     WAVES=1
 	ifeq ($(SIM),verilator)
-		PLUSARGS += --trace
+		COCOTB_PLUSARGS += --trace
 		EXTRA_ARGS += --trace # vcd format
 		EXTRA_ARGS += --trace-fst
 		EXTRA_ARGS += --trace-structs
@@ -101,12 +108,12 @@ else
 endif
 
 VERILOG_DESIGN?=\
-    ${INT_VERILOG_SOURCES} \
     ${SIM_VERILOG_SOURCES} \
+    ${XILINX_SIM_SOURCES} \
     ${EXT_VERILOG_SOURCES} \
-    ${XILINX_SIM_SOURCES}
+    ${INT_VERILOG_SOURCES} 
 
-VERILOG_SOURCES?=\
+VERILOG_SOURCES+=\
     ${VERILOG_DESIGN} \
     ${COCOTB_SOURCES}
 
@@ -124,7 +131,7 @@ all_libs_clean::
 
 waves:
 ifeq ($(SIM), icarus)
-	gtkwave dut.vcd &
+	gtkwave sim_build/*.fst &
 else ifeq ($(SIM), ius)
 	simvision -waves waves.shm &
 else ifeq ($(SIM),verilator)

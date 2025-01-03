@@ -12,7 +12,7 @@ from cocotbext.jtag import JTAGDevice
 from cocotbext.jtag import JTAGBus
 from cocotbext.jtag.devices.H3JTAGDevice import H3JTAGDevice
 from cocotbext.jtag.clkreset import Reset, Clk
-from cocotbext.uart import UartSource, UartSink
+# from cocotbext.uart import UartSource, UartSink
 
 
 class testbench:
@@ -28,8 +28,8 @@ class testbench:
         self.clk = Clk(dut, period=87, clkname="clkin")
         self.reset = Reset(dut, resetname='rst', reset_sense=1, reset_length=400)
 
-        self.uart_source = UartSource(getattr(dut, "uart_rx"), baud=230400, bits=8)
-        self.uart_sink   = UartSink(getattr(dut, "uart_tx"), baud=230400, bits=8)
+#         self.uart_source = UartSource(getattr(dut, "uart_rx"), baud=230400, bits=8)
+#         self.uart_sink   = UartSink(getattr(dut, "uart_tx"), baud=230400, bits=8)
 
     async def read_dtmcs(self):
         x = await self.jtag.read_val('DTMCS')

@@ -151,7 +151,7 @@ class JTAGDriver(CocoTBExtLogger):
                 self.log.info(
                     f"Device: {self.device} -              Received: 0x{self.ret_val:08x}"
                 )
-                if not self.dr_val is None:
+                if self.dr_val is not None:
                     if not self.ret_val == self.dr_val and not self.write:
                         raise Exception(
                             f"Expected: 0x{self.dr_val:08x} Returned: 0x{self.ret_val:08x}"
@@ -198,9 +198,9 @@ class JTAGDriver(CocoTBExtLogger):
         if not self.suppress_log:
             drpad = ceil(self.dr_len / 4)
             exp = ""
-            if not self.dr_val is None:
+            if self.dr_val is not None:
                 exp = f" Expected: 0x{self.dr_val:0{drpad}x}"
-            if not self.ir_val is None:
+            if self.ir_val is not None:
                 if self.write:
                     self.log.info(
                         f"Device: {self.device} - Addr: {hex(int(self.ir_val)):>6}    Write: 0x{self.dr_val:0{drpad}x}"
@@ -212,7 +212,7 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.total_ir_len = 0
         self.total_ir_val = 0
-        if not addr is None:
+        if addr is not None:
             for i, d in reversed(list(enumerate(self.devices))):
                 if i == device:
                     if isinstance(self.ir_val, int):
@@ -248,7 +248,7 @@ class JTAGDriver(CocoTBExtLogger):
                 f"IR Delay {self.tx_fsm.ir_delay}, IR Pause {self.tx_fsm.ir_pause}"
             )
 
-        if "TEST_LOGIC_RESET" == self.tx_fsm.state and not self.bus.tms.value:
+        if "TEST_LOGIC_RESET" == self.tx_fsm.state and "0" == self.bus.tms.value:
             self.bus.tms.value = True
             await FallingEdge(self.bus.tck)
 
