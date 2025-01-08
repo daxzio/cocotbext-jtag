@@ -36,7 +36,7 @@ async def test_fsm_reset(dut):
     tb = testbench(dut)
     await tb.jtag.set_reset()
     await tb.jtag.wait_clkn(20)
-    await tb.jtag.read_val('USERDATA')
+    await tb.jtag.read('USERDATA')
     await tb.jtag.wait_clkn(20)
     await tb.jtag.reset_fsm(7)
     await tb.jtag.wait_clkn(20)
@@ -52,11 +52,11 @@ async def test_repeat(dut):
     tb = testbench(dut)
     await tb.jtag.set_reset(4)
     await tb.jtag.wait_clkn(20)
-    await tb.jtag.read_val('IDCODE', 0x53817905)
-    await tb.jtag.read_val('IDCODE', 0x53817905)
+    await tb.jtag.read('IDCODE', 0x53817905)
+    await tb.jtag.read('IDCODE', 0x53817905)
     tb.jtag.explict_ir = True
-    await tb.jtag.read_val('IDCODE', 0x53817905)
-    await tb.jtag.read_val('IDCODE', 0x53817905)
+    await tb.jtag.read('IDCODE', 0x53817905)
+    await tb.jtag.read('IDCODE', 0x53817905)
 
 @test()
 async def test_idcode(dut):
@@ -72,21 +72,21 @@ async def test_idcode(dut):
 #     await tb.jtag.set_reset(4)
 #     await tb.jtag.wait_clkn(20)
 #     await tb.jtag.read_idcode()
-#     await tb.jtag.read_val('USERDATA', 0xe6712945)
+#     await tb.jtag.read('USERDATA', 0xe6712945)
 #     val = randint(0, 0xffffffff)
 #     await tb.jtag.write_val('USERDATA', val)
-#     await tb.jtag.read_val('USERDATA', val)
+#     await tb.jtag.read('USERDATA', val)
 #     await tb.jtag.wait_clkn(5)
 # 
 #     tb.jtag.explict_ir = False
 #     await tb.jtag.set_reset(4)
 #     await tb.jtag.wait_clkn(10)
 #     await tb.jtag.read_idcode()
-#     await tb.jtag.read_val('USERDATA', 0xe6712945)
+#     await tb.jtag.read('USERDATA', 0xe6712945)
 #     for i in range(64):
 #         val = randint(0, 0xffffffff)
 #         await tb.jtag.write_val('USERDATA', val)
-#         await tb.jtag.read_val('USERDATA', val)
+#         await tb.jtag.read('USERDATA', val)
 #         if 0 == randint(0, 4):
 #             await tb.jtag.read_idcode()
 #     await tb.jtag.wait_clkn(5)
@@ -96,11 +96,11 @@ async def test_idcode(dut):
 #     await tb.jtag.set_reset(4)
 #     await tb.jtag.wait_clkn(10)
 #     await tb.jtag.read_idcode()
-#     await tb.jtag.read_val('USERDATA', 0xe6712945)
+#     await tb.jtag.read('USERDATA', 0xe6712945)
 #     for i in range(64):
 #         val = randint(0, 0xffffffff)
 #         await tb.jtag.write_val('USERDATA', val)
-#         await tb.jtag.read_val('USERDATA', val)
+#         await tb.jtag.read('USERDATA', val)
 #         if 0 == randint(0, 4):
 #             await tb.jtag.read_idcode()
 #     await tb.jtag.wait_clkn(5)
