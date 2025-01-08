@@ -74,8 +74,8 @@ Once the module is instantiated, read and write operations can be initiated in a
 * `reset_finished()`: Asyn wait until reset is finished
 * `reset_fsm()`: Send 5 _tck_ pulses while _tms_ is held high in `JTAGBus`, this resets the finite state machine inside a JTAG TAP
 * `send_val(addr, val, device, write)`: Send _addr_ to _device_ (default: `0`). The _val_ is used to write if _write_ is True or verify against if _write_ is False
-* `write_val(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`). 
-* `read_val(addr, val=None, device=0)`: Read from _addr_ of _device_ (default: `0`). If _val_ present verify against returned value.
+* `write(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`). 
+* `read(addr, val=None, device=0)`: Read from _addr_ of _device_ (default: `0`). If _val_ present verify against returned value.
 * `read_idcode(device)`: Read device number _device_ and confirm it matched the IDCODE set for that device
 
 
