@@ -1,4 +1,7 @@
 import logging
+from collections import deque
+from typing import Deque
+
 from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb import start_soon
 
@@ -6,6 +9,23 @@ from .version import __version__
 from .cocotbext_logger import CocoTBExtLogger
 from .jtag_sm import JTAGRxSm
 from .jtag_bus import JTAGBus
+
+
+class JTAGTXn:
+    def __init__(
+        self,
+        ir_val: int = 0x00,
+        dr_cnt: int = 0x00,
+        tdi: int = 0x00,
+        tdo: int = 0x00,
+    ):
+        self.ir_val = ir_val
+        self.dr_cnt = dr_cnt
+        self.tdi = tdi
+        self.tdo = tdo
+
+    def __str__(self):
+        return f"0x{self.ir_val:x} {self.dr_cnt} tdi 0x{self.tdi:x} tdo 0x{self.tdo:x}"
 
 
 class JTAGMonitor(CocoTBExtLogger):
@@ -25,6 +45,9 @@ class JTAGMonitor(CocoTBExtLogger):
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
 
         self.bus = bus
+        self.ir_val = 0
+
+        self.queue_txn: Deque[JTAGTXn] = deque()
 
         start_soon(self._jtag_fsm())
         start_soon(self._reset())
@@ -55,13 +78,26 @@ class JTAGMonitor(CocoTBExtLogger):
             if "SHIFT_IR" == self.fsm.state:
                 self.log.debug(f"{self.fsm.state} {self.fsm.ir_cnt}")
             elif "UPDATE_IR" == self.fsm.state:
-                self.log.debug(f"{self.fsm.state} 0x{self.fsm.ir_val_in:x}")
+                self.log.info(f"{self.fsm.state} 0x{self.fsm.ir_val_in:x}")
+                self.ir_val = self.fsm.ir_val_in
             elif "SHIFT_DR" == self.fsm.state:
                 self.log.debug(f"{self.fsm.state} {self.fsm.dr_cnt}")
             elif "UPDATE_DR" == self.fsm.state:
-                self.log.debug(
+                self.log.info(
                     f"{self.fsm.state} tdi 0x{self.fsm.dr_val_in:x} tdo 0x{self.fsm.dr_val_out:x}"
                 )
+                #                 print(f"0x{self.ir_val:x} {self.fsm.dr_cnt} tdi 0x{self.fsm.dr_val_in:x} tdo 0x{self.fsm.dr_val_out:x}")
+                txn = JTAGTXn(
+                    self.ir_val,
+                    self.fsm.dr_cnt,
+                    self.fsm.dr_val_in,
+                    self.fsm.dr_val_out,
+                )
+                self.queue_txn.append(txn)
             else:
                 self.log.debug(f"{self.fsm.state}")
             self.fsm.update_state()
+
+    @property
+    def empty_txn(self) -> bool:
+        return not self.queue_txn

@@ -1,6 +1,6 @@
 """
 
-Copyright (c) 2024 Daxzio
+Copyright (c) 2024-2025 Daxzio
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -38,6 +38,9 @@ from .gatedclock import GatedClock
 from .jtag_sm import JTAGTxSm, JTAGRxSm
 from .jtag_bus import JTAGBus
 from .jtag_device import JTAGDevice
+
+# from warnings import deprecated
+from warnings import warn
 
 
 class JTAGDriver(CocoTBExtLogger):
@@ -153,7 +156,7 @@ class JTAGDriver(CocoTBExtLogger):
                     f"Device: {self.device} -              Received: 0x{self.ret_val:08x}"
                 )
                 if self.dr_val is not None:
-                    if not self.ret_val == self.dr_val and not self.write:
+                    if not self.ret_val == self.dr_val and not self.jwrite:
                         raise Exception(
                             f"Expected: 0x{self.dr_val:08x} Returned: 0x{self.ret_val:08x}"
                         )
@@ -174,7 +177,7 @@ class JTAGDriver(CocoTBExtLogger):
         write: bool = True,
     ) -> None:
         self.device = device
-        self.write = write
+        self.jwrite = write
         if isinstance(addr, str):
             addr = self.active_device.names[addr].address
         elif isinstance(addr, int):
@@ -202,7 +205,7 @@ class JTAGDriver(CocoTBExtLogger):
             if self.dr_val is not None:
                 exp = f" Expected: 0x{self.dr_val:0{drpad}x}"
             if self.ir_val is not None:
-                if self.write:
+                if self.jwrite:
                     self.log.info(
                         f"Device: {self.device} - Addr: {hex(int(self.ir_val)):>6}    Write: 0x{self.dr_val:0{drpad}x}"
                     )
@@ -233,7 +236,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.tx_fsm.dr_val = self.total_dr_val
         self.tx_fsm.dr_len = self.total_dr_len
         self.tx_fsm.idle_delay = self.active_device.idle_delay
-        self.tx_fsm.write = self.write
+        self.tx_fsm.write = self.jwrite
         self.tx_fsm.explict_ir = self.explict_ir
         self.tx_fsm.start = True
         self.clock_gated = True
@@ -271,17 +274,34 @@ class JTAGDriver(CocoTBExtLogger):
         self.tx_fsm.update_state()
         self.clock_gated = False
 
-    async def write_val(
-        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
+    async def write(
+        self,
+        addr: Union[int, str, None],
+        val: Union[int, None] = None,
+        ret_val: Union[int, None] = None,
+        device: int = 0,
     ) -> None:
         await self.send_val(addr, val, device, write=True)
         self.suppress_log = False
 
-    async def read_val(
+    async def write_val(
+        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
+    ) -> None:
+        warn("This method is deprecated", DeprecationWarning, stacklevel=2)
+        await self.write(addr, val, device)
+
+    async def read(
         self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
     ):
         await self.send_val(addr, val, device, write=False)
         return self.ret_val
+
+    async def read_val(
+        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
+    ):
+        warn("This method is deprecated", DeprecationWarning, stacklevel=2)
+        ret_val = await self.read(addr, val, device)
+        return ret_val
 
     async def shift_dr(
         self, num: int = 32, val: Union[int, None] = None, device: int = 0

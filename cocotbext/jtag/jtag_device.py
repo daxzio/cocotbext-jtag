@@ -27,12 +27,18 @@ from math import ceil
 
 class JTAGReg:
     def __init__(
-        self, name: str, width: int, address: int = -1, ir_len: int = 4
+        self,
+        name: str,
+        width: int,
+        address: int = -1,
+        ir_len: int = 4,
+        write: bool = False,
     ) -> None:
         self.name = name
         self.width = width
         self.address = address
         self.ir_len = ir_len
+        self.write = write
         if -1 == address:
             if "BYPASS" == name:
                 self.address = (2**self.ir_len) - 1
@@ -70,13 +76,14 @@ class JTAGDevice:
         name: str,
         width: int,
         address: int = -1,
+        write: bool = False,
     ) -> None:
         if not -1 == address:
             if address >= 2**self.ir_len:
                 raise Exception(
                     f"Address supplied for {name}, {hex(address)}, is out of range possible for ir_len {self.ir_len}"
                 )
-        jr = JTAGReg(name, width, address, self.ir_len)
+        jr = JTAGReg(name, width, address, self.ir_len, write)
         self.names[jr.name] = jr
         self.addresses[jr.address] = jr
 
