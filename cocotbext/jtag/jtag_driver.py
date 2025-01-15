@@ -23,6 +23,7 @@ THE SOFTWARE.
 """
 
 import logging
+import datetime
 from random import seed, randint
 from math import ceil
 from typing import Union
@@ -63,7 +64,7 @@ class JTAGDriver(CocoTBExtLogger):
 
         self.log.info("JTAG Driver")
         self.log.info(f"cocotbext-jtag version {__version__}")
-        self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
+        self.log.info(f"Copyright (c) 2024-{datetime.datetime.now().year} Daxzio")
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
         if hasattr(self.bus, "trst"):

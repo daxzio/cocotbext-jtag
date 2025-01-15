@@ -2,9 +2,13 @@ TOPLEVEL_LANG?=verilog
 TOPLEVEL?=dut
 COCOTB_TEST_MODULES?=test_dut
 
-ifeq ($(TOPLEVEL_LANG),verilog)
-    WAVES=1
-endif
+WAVES?=1
+# ifeq ($(TOPLEVEL_LANG),verilog)
+#     WAVES=1
+# endif
+# ifeq ($(TOPLEVEL_LANG),vhdl)
+#     WAVES=1
+# endif
 # COCOTB_RESOLVE_X?=ZEROS
 # export COCOTB_RESOLVE_X
 
@@ -40,22 +44,18 @@ ifeq ($(TOPLEVEL_LANG),verilog)
 	else ifeq ($(SIM),verilator)
         DEFINES += COCOTB_VERILATOR=1
 		COMPILE_ARGS += --no-timing -Wno-WIDTHEXPAND -Wno-WIDTHTRUNC -Wno-STMTDLY
-# 		COMPILE_ARGS += --public
-# 		COMPILE_ARGS += --public-flat-rw
-# 		COMPILE_ARGS += --public-depth 10 --hierarchical -j 8 --public-flat-rw
-# 	    EXTRA_ARGS += --public-depth 10
-# 		PLUSARGS += --public-depth 10
 	endif
 endif
 
 ifeq ($(WAVES),1)
     DEFINES += COCOTB_WAVES=1
-#     WAVES=1
 	ifeq ($(SIM),verilator)
 		COCOTB_PLUSARGS += --trace
 		EXTRA_ARGS += --trace # vcd format
 		EXTRA_ARGS += --trace-fst
 		EXTRA_ARGS += --trace-structs
+	else ifeq ($(SIM),ghdl)
+        SIM_ARGS += --wave=sim_build/${TOPLEVEL}.ghw 
 	endif
 endif
 
@@ -63,13 +63,13 @@ endif
 # Process generics
 ifeq ($(TOPLEVEL_LANG),verilog)
 	ifeq ($(SIM), icarus)
-	    COMPILE_ARGS += $(addprefix -P${TOPLEVEL}., $(GENERICS))
+        COMPILE_ARGS += $(addprefix -P${TOPLEVEL}., $(addsuffix ', $(subst =,=', $(GENERICS))))
 	else ifneq ($(filter $(SIM),questa modelsim riviera activehdl),)
 	    SIM_ARGS += $(addprefix -g, $(GENERICS))
 	else ifeq ($(SIM),vcs)
 	    COMPILE_ARGS += $(addprefix -pvalue+/, $(GENERICS))
 	else ifeq ($(SIM),verilator)
-	    COMPILE_ARGS += $(addprefix -G, $(GENERICS))
+        COMPILE_ARGS += $(addprefix -G, $(addsuffix ', $(subst =,=', $(GENERICS))))
 	else ifneq ($(filter $(SIM),ius xcelium),)
 	    EXTRA_ARGS += $(addprefix -defparam ${TOPLEVEL}., $(GENERICS))
 	endif
@@ -115,11 +115,18 @@ VERILOG_DESIGN?=\
 
 VERILOG_SOURCES+=\
     ${VERILOG_DESIGN} \
-    ${COCOTB_SOURCES}
 
-VHDL_SOURCES += \
+VHDL_SOURCES+=\
     ${INT_VHDL_SOURCES} \
     ${EXT_VHDL_SOURCES}
+    
+ifeq ($(TOPLEVEL_LANG),verilog)
+	VERILOG_SOURCES+=\
+		${COCOTB_SOURCES}
+else
+	VHDL_SOURCES+=\
+		${COCOTB_SOURCES}
+endif
 
 ${CDSLIB}:
 	echo "include \$${INCISIVE_HOME}/tools.lnx86/inca/files/cds.lib" > ${CDSLIB}
@@ -131,13 +138,17 @@ all_libs_clean::
 
 waves:
 ifeq ($(SIM), icarus)
-	gtkwave sim_build/*.fst &
+	surfer sim_build/*.fst &
 else ifeq ($(SIM), ius)
 	simvision -waves waves.shm &
 else ifeq ($(SIM),verilator)
-	gtkwave dump.fst &
+	surfer dump.fst &
+else ifeq ($(SIM),ghdl)
+	surfer sim_build/${TOPLEVEL}.ghw &
 endif
 
 clean::
-	rm -rf __pycache__/ .simvision/ .Xil/ results.xml *.trn *.dsn vivado* *.vcd *.out irun* simvision* xrun* .bpad/ waves.shm/ *.err INCA_libs/ *.fst* ncvlog.log
+	rm -rf __pycache__/ .simvision/ .Xil/ results.xml *.trn *.dsn vivado* *.vcd *.out \
+		irun* simvision* xrun* .bpad/ waves.shm/ *.err INCA_libs/ *.fst* ncvlog.log \
+		e~${TOPLEVEL}.o ${TOPLEVEL}
 

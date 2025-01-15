@@ -87,6 +87,11 @@ jobs:
 #         with:
 #           backend: llvm
 #       - run: ghdl --version      
+      - name: Install dependency for ghdl
+        uses: ghdl/setup-ghdl@v1
+        with:
+          version: nightly
+          backend: llvm
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:

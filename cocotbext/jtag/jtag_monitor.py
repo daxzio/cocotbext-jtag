@@ -1,4 +1,5 @@
 import logging
+import datetime
 from collections import deque
 from typing import Deque
 
@@ -41,7 +42,7 @@ class JTAGMonitor(CocoTBExtLogger):
         self.log.setLevel(logging.INFO)
         self.log.info("JTAG Monitor")
         self.log.info(f"cocotbext-jtag version {__version__}")
-        self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
+        self.log.info(f"Copyright (c) 2024-{datetime.datetime.now().year} Daxzio")
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
 
         self.bus = bus

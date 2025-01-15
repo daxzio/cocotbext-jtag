@@ -1,7 +1,9 @@
 import socket
 import logging
+import datetime
 from random import seed, randint
 
+from cocotb import start_soon
 from cocotb.triggers import Timer
 
 from .version import __version__
@@ -79,7 +81,7 @@ class OpenOCDClient:
                         self.bus.trst.value = False
                         step = 1
                 elif "t" == c or "u" == c:
-                    print(f"{c} trst reset false")
+                    self.log.debug(f"{c} trst reset false")
                     raise
                 elif c >= "0" and c <= "7":
                     mask = ord(c) - ord("0")
@@ -97,7 +99,7 @@ class OpenOCDClient:
                         raise
                         self.send_tx()
                 elif "Q" == c:
-                    print(f"{c} OpenOCD sent quit command")
+                    self.log.debug(f"{c} OpenOCD sent quit command")
                     self.stop_socket()
                     self.finish = True
                     return
@@ -108,7 +110,7 @@ class OpenOCDClient:
                     step = randint(0, 8)
                     step = 2
                 else:
-                    print(f"{c} not implemented")
+                    self.log.warning(f"{c} not implemented")
                     raise
 
                 while not 0 == step:
@@ -142,7 +144,7 @@ class OCDDriver(CocoTBExtLogger):
 
         self.log.info("OpenOCD JTAG Driver")
         self.log.info(f"cocotbext-jtag version {__version__}")
-        self.log.info(f"Copyright (c) {self.copyright_year} Daxzio")
+        self.log.info(f"Copyright (c) 2024-{datetime.datetime.now().year} Daxzio")
         self.log.info("https://github.com/daxzio/cocotbext-jtag")
         self.log.info(f"    JTAG CLock Frequency: {self.siunits(self.frequency)}Hz")
         if hasattr(self.bus, "trst"):
@@ -153,4 +155,13 @@ class OCDDriver(CocoTBExtLogger):
         self.ocd = OpenOCDClient(
             self.bus, self.log, self.host, self.port, self.period, self.units
         )
+#         start_soon(self._run())
+#         start_soon(self._start_parse())
+#         
+#     async def _run(self):
         self.ocd.start_socket()
+    
+    async def _start_parse(self):
+        await self.ocd.parse()
+#         if not self.ocd.finish:
+#             await Timer(50, units="us")
