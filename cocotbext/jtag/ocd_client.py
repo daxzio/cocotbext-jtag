@@ -155,13 +155,15 @@ class OCDDriver(CocoTBExtLogger):
         self.ocd = OpenOCDClient(
             self.bus, self.log, self.host, self.port, self.period, self.units
         )
-#         start_soon(self._run())
-#         start_soon(self._start_parse())
-#         
-#     async def _run(self):
+        #         start_soon(self._run())
+        #         start_soon(self._start_parse())
+        #
+        #     async def _run(self):
         self.ocd.start_socket()
-    
+
     async def _start_parse(self):
         await self.ocd.parse()
+
+
 #         if not self.ocd.finish:
 #             await Timer(50, units="us")
