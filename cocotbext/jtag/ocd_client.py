@@ -3,7 +3,7 @@ import logging
 import datetime
 from random import seed, randint
 
-from cocotb import start_soon
+# from cocotb import start_soon
 from cocotb.triggers import Timer
 
 from .version import __version__
