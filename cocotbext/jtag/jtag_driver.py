@@ -76,7 +76,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
-        self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False)
+        self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False, impl='py')
         start_soon(self.gc.start(start_high=False))
 
         if hasattr(self.bus, "trst"):
@@ -274,6 +274,8 @@ class JTAGDriver(CocoTBExtLogger):
         await FallingEdge(self.bus.tck)
         self.tx_fsm.update_state()
         self.clock_gated = False
+        if self.ret_val is None:
+            raise Exception("self.ret_val should not be 'None'")
 
     async def write(
         self,
@@ -310,8 +312,8 @@ class JTAGDriver(CocoTBExtLogger):
         self.shift_dr_num = num
         self.ret_val = None
         await self.send_val(addr=None, val=val, device=device, write=False)
-        if self.ret_val is None:
-            raise
+#         if self.ret_val is None:
+#             raise
         return self.ret_val
 
     async def read_idcode(self, device: int = 0) -> None:

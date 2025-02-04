@@ -1,6 +1,6 @@
 # JTAG interface modules for Cocotb
 
-[![Build Status](https://github.com/daxzio/cocotbext-jtag/workflows/Regression%20Tests/badge.svg?branch=main)](https://github.com/daxzio/cocotbext-jtag/actions/)
+[![Build Status](https://github.com/daxzio/cocotbext-jtag/actions/workflows/test_checkin.yml/badge.svg?branch=main)](https://github.com/daxzio/cocotbext-jtag/actions/)
 [![codecov](https://codecov.io/gh/daxzio/cocotbext-jtag/branch/main/graph/badge.svg)](https://codecov.io/gh/daxzio/cocotbext-jtag)
 [![PyPI version](https://badge.fury.io/py/cocotbext-jtag.svg)](https://pypi.org/project/cocotbext-jtag)
 [![Downloads](https://pepy.tech/badge/cocotbext-jtag)](https://pepy.tech/project/cocotbext-jtag)

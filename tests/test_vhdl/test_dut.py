@@ -24,10 +24,17 @@ class testbench:
         self.jtag = JTAGDriver(bus)
         self.jtag.add_device(J1JTAGDevice())
 #         self.jtag.log.setLevel(logging.DEBUG)
-        
+#         
 #         self.jtag_mon = JTAGMonitor(bus)
 #         self.jtag_mon.log.setLevel(logging.DEBUG)
 
+@test()
+async def test_idcode(dut):
+    tb = testbench(dut)
+    await tb.jtag.set_reset(4)
+    await tb.jtag.wait_clkn(20)
+    await tb.jtag.read_idcode()
+ 
         
 @test()
 async def test_fsm_reset(dut):
@@ -55,14 +62,7 @@ async def test_repeat(dut):
     tb.jtag.explict_ir = True
     await tb.jtag.read('IDCODE', 0x53817905)
     await tb.jtag.read('IDCODE', 0x53817905)
-# 
-@test()
-async def test_idcode(dut):
-    tb = testbench(dut)
-    await tb.jtag.set_reset(4)
-    await tb.jtag.wait_clkn(20)
-    await tb.jtag.read_idcode()
- 
+
 @test()
 async def test_userdata(dut):
     tb = testbench(dut)
