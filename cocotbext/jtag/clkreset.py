@@ -29,7 +29,7 @@ from cocotb.triggers import RisingEdge, Timer
 
 class Clk:
     def __init__(
-        self, dut, period: int = 10, units: str = "ns", clkname: str = "clk"
+        self, dut, period: int = 10, unit: str = "ns", clkname: str = "clk"
     ) -> None:
         try:
             self.clk = getattr(dut, clkname)
@@ -37,7 +37,7 @@ class Clk:
             self.clk = dut
         self.name = clkname
         self.period = period
-        start_soon(Clock(self.clk, self.period, units=units).start())
+        start_soon(Clock(self.clk, self.period, unit=unit).start())
 
     async def wait_clkn(self, length: int = 1) -> None:
         for i in range(int(length)):
@@ -52,7 +52,7 @@ class Reset:
         reset_length=100,
         reset_sense=1,
         resetname="reset",
-        units="ns",
+        unit="ns",
     ):
 
         try:
@@ -63,26 +63,35 @@ class Reset:
         self.clk = clk
         self.reset_length = reset_length
         self.reset_sense = bool(reset_sense)
-        self.units = units
+        self.unit = unit
         self.finished = False
 
-        self.reset.setimmediatevalue(self.reset_sense)
+        self.reset.value = self.reset_sense
         start_soon(self.set_reset())
 
     async def set_reset(self, reset_length=None):
         if reset_length is None:
             reset_length = self.reset_length
 
-        await Timer(reset_length, units=self.units)
+        try:
+            await Timer(reset_length, unit=self.unit)
+        except TypeError:
+            await Timer(reset_length, units=self.unit)
         self.reset.value = self.reset_sense
         self.finished = False
-        await Timer(reset_length, units=self.units)
+        try:
+            await Timer(reset_length, unit=self.unit)
+        except TypeError:
+            await Timer(reset_length, units=self.unit)
         self.reset.value = not (self.reset_sense)
         self.finished = True
 
     async def reset_finished(self):
         while not self.finished:
-            await Timer(10, units=self.units)
+            try:
+                await Timer(10, unit=self.unit)
+            except TypeError:
+                await Timer(10, units=self.unit)
 
 
 class ClkReset:

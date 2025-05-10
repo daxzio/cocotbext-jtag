@@ -49,7 +49,7 @@ class JTAGDriver(CocoTBExtLogger):
         self,
         bus: JTAGBus,
         period: int = 100,
-        units: str = "ns",
+        unit: str = "ns",
         logging_enabled: bool = True,
     ) -> None:
         CocoTBExtLogger.__init__(
@@ -58,7 +58,7 @@ class JTAGDriver(CocoTBExtLogger):
         seed(6)
         self.log.setLevel(logging.INFO)
         self.period = period
-        self.units = units
+        self.unit = unit
         self.frequency = 1000_000_000 / self.period
         self.bus = bus
 
@@ -76,7 +76,7 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
-        self.gc = GatedClock(self.bus.tck, self.period, units=units, gated=False, impl='py')
+        self.gc = GatedClock(self.bus.tck, self.period, unit=unit, gated=False, impl='py')
         start_soon(self.gc.start(start_high=False))
 
         if hasattr(self.bus, "trst"):
@@ -85,7 +85,7 @@ class JTAGDriver(CocoTBExtLogger):
                 #                 self.bus.tck,
                 reset_sense=0,
                 reset_length=10 * self.period,
-                units=self.units,
+                unit=self.unit,
             )
 
         #         self.bus.tms.setimmediatevalue(1)
@@ -111,7 +111,10 @@ class JTAGDriver(CocoTBExtLogger):
             if self.gc.gated:
                 await RisingEdge(self.bus.tck)
             else:
-                await Timer(self.period, units=self.units)
+                try:
+                    await Timer(self.period, unit=self.unit)
+                except TypeError:
+                    await Timer(self.period, units=self.unit)
 
     @property
     def clock_gated(self) -> bool:
