@@ -60,9 +60,9 @@ class GatedClock(Clock):
         signal: The clock pin/signal to be driven.
         period: The clock period. Must convert to an even number of
             timesteps.
-        unit: One of
+        units: One of
             ``'step'``, ``'fs'``, ``'ps'``, ``'ns'``, ``'us'``, ``'ms'``, ``'sec'``.
-            When *unit* is ``'step'``,
+            When *units* is ``'step'``,
             the timestep is determined by the simulator (see :make:var:`COCOTB_HDL_TIMEPRECISION`).
 
     If you need more features like a phase shift and an asymmetric duty cycle,
@@ -72,9 +72,9 @@ class GatedClock(Clock):
 
         async def custom_clock():
             # pre-construct triggers for performance
-            high_time = Timer(high_delay, unit="ns")
-            low_time = Timer(low_delay, unit="ns")
-            await Timer(initial_delay, unit="ns")
+            high_time = Timer(high_delay, units="ns")
+            low_time = Timer(low_delay, units="ns")
+            await Timer(initial_delay, units="ns")
             while True:
                 dut.clk.value = 1
                 await high_time
@@ -91,29 +91,29 @@ class GatedClock(Clock):
         async def custom_clock():
             while True:
                 dut.clk.value = 1
-                await Timer(high_delay, unit="ns")
+                await Timer(high_delay, units="ns")
                 dut.clk.value = 0
-                await Timer(low_delay, unit="ns")
+                await Timer(low_delay, units="ns")
 
 
         high_delay = low_delay = 100
         await cocotb.start(custom_clock())
-        await Timer(1000, unit="ns")
+        await Timer(1000, units="ns")
         high_delay = low_delay = 10  # change the clock speed
-        await Timer(1000, unit="ns")
+        await Timer(1000, units="ns")
 
     .. versionchanged:: 1.5
-        Support ``'step'`` as the *unit* argument to mean "simulator time step".
+        Support ``'step'`` as the *units* argument to mean "simulator time step".
 
     .. versionchanged:: 2.0
-        Passing ``None`` as the *unit* argument was removed, use ``'step'`` instead.
+        Passing ``None`` as the *units* argument was removed, use ``'step'`` instead.
     """
 
     def __init__(
         self,
         signal,
         period: Union[float, Fraction, Decimal],
-        unit: str = "step",
+        units: str = "step",
         impl: str = "auto",
         gated: bool = True,
     ):
@@ -123,7 +123,7 @@ class GatedClock(Clock):
                 self,
                 signal,
                 period,
-                unit,
+                units,
                 impl,
             )
         except TypeError:
@@ -131,7 +131,7 @@ class GatedClock(Clock):
                 self,
                 signal,
                 period,
-                unit,
+                units,
             )
             self.impl = impl
         self.gated = gated

@@ -37,7 +37,7 @@ class Clk:
             self.clk = dut
         self.name = clkname
         self.period = period
-        start_soon(Clock(self.clk, self.period, unit=unit).start())
+        start_soon(Clock(self.clk, self.period, units=unit).start())
 
     async def wait_clkn(self, length: int = 1) -> None:
         for i in range(int(length)):

@@ -76,10 +76,10 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
-        self.gc = GatedClock(self.bus.tck, self.period, unit=unit, gated=False, impl='py')
+        self.gc = GatedClock(self.bus.tck, self.period, units=unit, gated=False, impl='py')
         start_soon(self.gc.start(start_high=False))
 
-        if hasattr(self.bus, "trst"): 
+        if hasattr(self.bus, "trst"):
             self.reset = Reset(
                 self.bus.trst,
                 #                 self.bus.tck,
