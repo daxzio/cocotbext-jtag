@@ -32,7 +32,7 @@ class testbench:
 #         self.uart_sink   = UartSink(getattr(dut, "uart_tx"), baud=230400, bits=8)
 
     async def read_dtmcs(self):
-        x = await self.jtag.read_val('DTMCS')
+        x = await self.jtag.read('DTMCS')
         y = {
             'version'      : [ 0, 4, 0],
             'abits'        : [ 4, 6, 0],
@@ -56,7 +56,7 @@ class testbench:
         val = (addr << 34) + (0 << 2) + op
         print(hex(val))
         await self.jtag.send_val('DMI', val)
-        x = await self.jtag.read_val('DMI')
+        x = await self.jtag.read('DMI')
         print(hex(x))
  
     async def write_dmi(self, addr, data):

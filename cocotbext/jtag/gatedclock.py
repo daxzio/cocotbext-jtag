@@ -32,12 +32,12 @@ from fractions import Fraction
 from typing import Union
 
 from cocotb.clock import Clock
-from cocotb.triggers import Event, Timer
+from cocotb.triggers import Timer
 
-try:
-    from cocotb.simulator import clock_create
-except ImportError:
-    pass
+# try:
+#     from cocotb.simulator import clock_create
+# except ImportError:
+#     pass
 
 
 class GatedClock(Clock):
