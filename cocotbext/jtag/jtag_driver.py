@@ -40,7 +40,6 @@ from .jtag_sm import JTAGTxSm, JTAGRxSm
 from .jtag_bus import JTAGBus
 from .jtag_device import JTAGDevice
 
-# from warnings import deprecated
 from warnings import warn
 
 
@@ -76,13 +75,14 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
-        self.gc = GatedClock(self.bus.tck, self.period, units=unit, gated=False, impl='py')
+        self.gc = GatedClock(
+            self.bus.tck, self.period, units=unit, gated=False, impl="py"
+        )
         start_soon(self.gc.start(start_high=False))
 
         if hasattr(self.bus, "trst"):
             self.reset = Reset(
                 self.bus.trst,
-                #                 self.bus.tck,
                 reset_sense=0,
                 reset_length=10 * self.period,
                 unit=self.unit,
@@ -110,7 +110,7 @@ class JTAGDriver(CocoTBExtLogger):
             else:
                 try:
                     await Timer(self.period, units=self.unit)
-                except (TypeError, AttributeError): # new in cocotb 2.0.0
+                except (TypeError, AttributeError):  # new in cocotb 2.0.0
                     await Timer(self.period, unit=self.unit)
 
     @property
@@ -291,7 +291,6 @@ class JTAGDriver(CocoTBExtLogger):
         self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
     ) -> None:
         warn("This method is deprecated", DeprecationWarning, stacklevel=2)
-        raise
         await self.write(addr, val, device)
 
     async def read(
@@ -305,7 +304,6 @@ class JTAGDriver(CocoTBExtLogger):
     ):
         warn("This method is deprecated", DeprecationWarning, stacklevel=2)
         ret_val = await self.read(addr, val, device)
-        raise
         return ret_val
 
     async def shift_dr(
@@ -314,8 +312,8 @@ class JTAGDriver(CocoTBExtLogger):
         self.shift_dr_num = num
         self.ret_val = None
         await self.send_val(addr=None, val=val, device=device, write=False)
-#         if self.ret_val is None:
-#             raise
+        #         if self.ret_val is None:
+        #             raise
         return self.ret_val
 
     async def read_idcode(self, device: int = 0) -> None:

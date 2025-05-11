@@ -10,6 +10,7 @@ class M3JTAGDevice(JTAGDevice):
         idcode (int): The ID code of the JTAG device. Defaults to 0x4BA00477.
         ir_len (int): The length of the instruction register. Defaults to 4.
     """
+
     def __init__(self, name="CortexM3", idcode=0x4BA00477, ir_len=4):
         """
         Initializes a new instance of the M3JTAGDevice class.

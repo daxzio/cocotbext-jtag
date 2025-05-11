@@ -37,7 +37,10 @@ class Clk:
             self.clk = dut
         self.name = clkname
         self.period = period
-        start_soon(Clock(self.clk, self.period, units=unit).start())
+        try:
+            start_soon(Clock(self.clk, self.period, unit=unit).start())
+        except TypeError:
+            start_soon(Clock(self.clk, self.period, units=unit).start())
 
     async def wait_clkn(self, length: int = 1) -> None:
         for i in range(int(length)):
@@ -110,7 +113,6 @@ class ClkReset:
             self.period = 1000 / self.clk_freq
         else:
             self.period = period
-        #        #print(f"clock period {self.period} {self.clk_freq}")
         self.clk = Clk(dut, period=self.period, clkname=clkname)
         self.reset = Reset(
             dut,

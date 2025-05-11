@@ -154,30 +154,30 @@ class GatedClock(Clock):
 
         t_high = self.period // 2
 
-#         if self.impl == "gpi":
-#             raise Exception("Unimplemented")
-#             clkobj = clock_create(self.signal._handle)
-#             clkobj.start(self.period, t_high, start_high)
-# 
-#             try:
-#                 # The clock is meant to toggle forever, so awaiting this should
-#                 # never return (except in case of CancelledError).
-#                 # Await on an event that's never set.
-#                 e = Event()
-#                 await e.wait()
-#             finally:
-#                 clkobj.stop()
-#         else:
-#             timer_high = Timer(t_high)
-#             timer_low = Timer(self.period - t_high)
-#             if start_high:
-#                 self.signal.value = self.gated
-#                 await timer_high
-#             while True:
-#                 self.signal.value = 0
-#                 await timer_low
-#                 self.signal.value = self.gated
-#                 await timer_high
+        #         if self.impl == "gpi":
+        #             raise Exception("Unimplemented")
+        #             clkobj = clock_create(self.signal._handle)
+        #             clkobj.start(self.period, t_high, start_high)
+        #
+        #             try:
+        #                 # The clock is meant to toggle forever, so awaiting this should
+        #                 # never return (except in case of CancelledError).
+        #                 # Await on an event that's never set.
+        #                 e = Event()
+        #                 await e.wait()
+        #             finally:
+        #                 clkobj.stop()
+        #         else:
+        #             timer_high = Timer(t_high)
+        #             timer_low = Timer(self.period - t_high)
+        #             if start_high:
+        #                 self.signal.value = self.gated
+        #                 await timer_high
+        #             while True:
+        #                 self.signal.value = 0
+        #                 await timer_low
+        #                 self.signal.value = self.gated
+        #                 await timer_high
         timer_high = Timer(t_high)
         timer_low = Timer(self.period - t_high)
         if start_high:
