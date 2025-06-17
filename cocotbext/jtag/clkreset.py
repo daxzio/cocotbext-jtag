@@ -38,9 +38,9 @@ class Clk:
         self.name = clkname
         self.period = period
         try:
-            start_soon(Clock(self.clk, self.period, unit=unit).start())
-        except TypeError:
             start_soon(Clock(self.clk, self.period, units=unit).start())
+        except (TypeError, AttributeError):  # new in cocotb 2.0.0
+            start_soon(Clock(self.clk, self.period, unit=unit).start())
 
     async def wait_clkn(self, length: int = 1) -> None:
         for i in range(int(length)):
