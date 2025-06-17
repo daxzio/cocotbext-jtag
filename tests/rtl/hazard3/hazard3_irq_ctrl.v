@@ -188,7 +188,7 @@ assign meicontext_clearts = wen_m_mode && wtype != CSR_WTYPE_C && addr == MEICON
 // Trap request is asserted when there is an interrupt at or above our current
 // preemption level. meinext displays interrupts at or above our *previous*
 // preemption level: this masking helps avoid re-taking IRQs in frames that you
-// have preempted. 
+// have preempted.
 
 wire [NUM_IRQS-1:0] meipa = irq_r | meifa;
 wire [MAX_IRQS-1:0] meipa_rdata = {{MAX_IRQS-NUM_IRQS{1'b0}}, meipa};

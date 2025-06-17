@@ -8,7 +8,7 @@ WORK_BASE?=../..
 TOPLEVEL = dut
 MODULE = test_dut
 
-VHDL_OUTPUT := ${PROJ_HOME}/tests/rtl/jtaglet/jtaglet.vhd 
+VHDL_OUTPUT := ${PROJ_HOME}/tests/rtl/jtaglet/jtaglet.vhd
 
 CONV_VERILOG_SOURCES += \
     ${PROJ_HOME}/tests/rtl/jtaglet/ff_sync.v \
@@ -32,8 +32,8 @@ VHDL_SOURCES+=\
 COCOTB_SOURCES = \
     ./dut.vhd
 
-default: vlog2vhdl sim 
+default: vlog2vhdl sim
 
 # ${VHDL_OUTPUT}: vlog2vhdl
- 
+
 include ${PROJ_HOME}/rtlflo/cocotb_helper.mak

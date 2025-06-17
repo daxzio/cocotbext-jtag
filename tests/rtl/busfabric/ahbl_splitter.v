@@ -117,7 +117,7 @@ assign dst_hexcl     = {N_PORTS{src_hexcl}};
 always @ (*) begin
 	for (i = 0; i < N_PORTS; i = i + 1) begin
 		dst_htrans[i * 2 +: 2] = slave_sel_a[i] ? src_htrans : HTRANS_IDLE;
-	end 
+	end
 end
 
 // AHB state machine

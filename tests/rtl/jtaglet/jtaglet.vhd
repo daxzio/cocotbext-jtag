@@ -14,7 +14,7 @@ entity ff_sync is
     out_sig : out std_logic;
     rst_p : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module ff_sync (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/ff_sync.v:15)
 --   WIDTH = 1
@@ -23,7 +23,7 @@ architecture from_verilog of ff_sync is
   signal sync_reg : std_logic;  -- Declared at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/ff_sync.v:24
 begin
   out_sig <= out_sig_Reg;
-  
+
   -- Generated from always process in ff_sync (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/ff_sync.v:25)
   process (clk, rst_p) is
     variable Verilog_Assign_Tmp_0 : unsigned(1 downto 0);
@@ -66,7 +66,7 @@ entity jtaglet is
     userOp : out unsigned(7 downto 0);
     userOp_ready : out std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtaglet (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:22)
 --   BYPASS_OP = 31
@@ -96,7 +96,7 @@ architecture from_verilog of jtaglet is
   signal tdo_pre : std_logic;  -- Declared at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:167
   signal userData_tdo : std_logic;  -- Declared at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:67
   signal userOp_tdo : std_logic;  -- Declared at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:88
-  
+
   component jtag_reg is
     port (
       dr_dataIn : in std_logic;
@@ -113,7 +113,7 @@ architecture from_verilog of jtaglet is
       trst : in std_logic
     );
   end component;
-  
+
   component jtag_reg1 is
     port (
       dr_dataIn : in unsigned(31 downto 0);
@@ -130,7 +130,7 @@ architecture from_verilog of jtaglet is
       trst : in std_logic
     );
   end component;
-  
+
   component jtag_state_machine is
     port (
       state_capturedr : out std_logic;
@@ -145,7 +145,7 @@ architecture from_verilog of jtaglet is
       trst : in std_logic
     );
   end component;
-  
+
   component jtag_reg2 is
     port (
       dr_dataIn : in unsigned(31 downto 0);
@@ -163,7 +163,7 @@ architecture from_verilog of jtaglet is
     );
   end component;
   signal dr_dataOut_Readable : unsigned(31 downto 0);  -- Needed to connect outputs
-  
+
   component jtag_reg3 is
     port (
       dr_dataIn : in unsigned(7 downto 0);
@@ -184,7 +184,7 @@ architecture from_verilog of jtaglet is
 begin
   tdo <= tdo_Reg;
   ir_tdo <= ir_reg(0);
-  
+
   -- Generated from instantiation at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:135
   bypass_reg: jtag_reg
     port map (
@@ -199,7 +199,7 @@ begin
       tdo => bypass_tdo,
       trst => trst
     );
-  
+
   -- Generated from instantiation at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:114
   idcode_reg: jtag_reg1
     port map (
@@ -214,7 +214,7 @@ begin
       tdo => idcode_tdo,
       trst => trst
     );
-  
+
   -- Generated from instantiation at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:51
   jsm: jtag_state_machine
     port map (
@@ -230,7 +230,7 @@ begin
       trst => trst
     );
   userData_out <= dr_dataOut_Readable;
-  
+
   -- Generated from instantiation at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:72
   userData_reg: jtag_reg2
     port map (
@@ -247,7 +247,7 @@ begin
       trst => trst
     );
   userOp_ready <= dr_dataOutReady_Readable;
-  
+
   -- Generated from instantiation at /mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:93
   userOp_reg: jtag_reg3
     port map (
@@ -265,7 +265,7 @@ begin
       trst => trst
     );
   idcode <= X"53817905";
-  
+
   -- Generated from always process in jtaglet (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:153)
   process (tck, trst) is
   begin
@@ -285,7 +285,7 @@ begin
       end if;
     end if;
   end process;
-  
+
   -- Generated from always process in jtaglet (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:168)
   process (state_shiftdr, ir_reg, idcode_tdo, bypass_tdo, userData_tdo, userOp_tdo, state_shiftir, ir_tdo) is
   begin
@@ -309,7 +309,7 @@ begin
       end if;
     end if;
   end process;
-  
+
   -- Generated from always process in jtaglet (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtaglet.v:184)
   process (tck) is
   begin
@@ -342,7 +342,7 @@ entity jtag_reg is
     tdo : out std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:22)
 --   DR_LEN = 1
@@ -356,7 +356,7 @@ begin
   dr_dataOut <= dr_dataOut_Reg;
   dr_dataOutReady <= dr_dataOutReady_Reg;
   tdo <= dr_reg;
-  
+
   -- Generated from always process in jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:45)
   process (tck, trst) is
   begin
@@ -410,7 +410,7 @@ entity jtag_reg1 is
     tdo : out std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:22)
 --   DR_LEN = 32
@@ -424,7 +424,7 @@ begin
   dr_dataOut <= dr_dataOut_Reg;
   dr_dataOutReady <= dr_dataOutReady_Reg;
   tdo <= dr_reg(0);
-  
+
   -- Generated from always process in jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:45)
   process (tck, trst) is
   begin
@@ -489,7 +489,7 @@ entity jtag_state_machine is
     tms : in std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_state_machine (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_state_machine.v:22)
 --   CAPTURE_DR = 3
@@ -532,7 +532,7 @@ begin
   tmp_ivl_24 <= X"f";
   tmp_ivl_4 <= X"3";
   tmp_ivl_8 <= X"a";
-  
+
   -- Generated from always process in jtag_state_machine (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_state_machine.v:56)
   process (tck, trst) is
   begin
@@ -666,7 +666,7 @@ entity jtag_reg2 is
     tdo : out std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:22)
 --   DR_LEN = 32
@@ -680,7 +680,7 @@ begin
   dr_dataOut <= dr_dataOut_Reg;
   dr_dataOutReady <= dr_dataOutReady_Reg;
   tdo <= dr_reg(0);
-  
+
   -- Generated from always process in jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:45)
   process (tck, trst) is
   begin
@@ -734,7 +734,7 @@ entity jtag_reg3 is
     tdo : out std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:22)
 --   DR_LEN = 8
@@ -748,7 +748,7 @@ begin
   dr_dataOut <= dr_dataOut_Reg;
   dr_dataOutReady <= dr_dataOutReady_Reg;
   tdo <= dr_reg(0);
-  
+
   -- Generated from always process in jtag_reg (/mnt/sda/projects/cocotbext-jtag/tests/rtl/jtaglet/jtag_reg.v:45)
   process (tck, trst) is
   begin
@@ -778,4 +778,3 @@ begin
     end if;
   end process;
 end architecture;
-

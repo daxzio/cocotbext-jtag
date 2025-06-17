@@ -12,7 +12,7 @@
 module uart_regs (
 	input wire clk,
 	input wire rst_n,
-	
+
 	// APB Port
 	input wire apbs_psel,
 	input wire apbs_penable,
@@ -22,7 +22,7 @@ module uart_regs (
 	output wire [31:0] apbs_prdata,
 	output wire apbs_pready,
 	output wire apbs_pslverr,
-	
+
 	// Register interfaces
 	output reg  csr_en_o,
 	input wire  csr_busy_i,

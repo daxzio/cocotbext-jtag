@@ -24,7 +24,7 @@ entity jtag_reg is
     tdo : out std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_reg (jtag_reg.v:22)
 --   DR_LEN = 1
@@ -38,7 +38,7 @@ begin
   dr_dataOut <= dr_dataOut_Reg;
   dr_dataOutReady <= dr_dataOutReady_Reg;
   tdo <= dr_reg;
-  
+
   -- Generated from always process in jtag_reg (jtag_reg.v:45)
   process (tck, trst) is
   begin
@@ -68,4 +68,3 @@ begin
     end if;
   end process;
 end architecture;
-

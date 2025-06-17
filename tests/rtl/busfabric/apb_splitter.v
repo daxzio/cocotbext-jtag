@@ -21,7 +21,7 @@ module apb_splitter #(
 	output wire [N_SLAVES*W_DATA-1:0] apbm_pwdata,
 	input wire  [N_SLAVES-1:0]        apbm_pready,
 	input wire  [N_SLAVES*W_DATA-1:0] apbm_prdata,
-	input wire  [N_SLAVES-1:0]        apbm_pslverr 
+	input wire  [N_SLAVES-1:0]        apbm_pslverr
 );
 
 integer i;

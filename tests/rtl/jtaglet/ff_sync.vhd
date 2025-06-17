@@ -14,7 +14,7 @@ entity ff_sync is
     out_sig : out std_logic;
     rst_p : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module ff_sync (ff_sync.v:15)
 --   WIDTH = 1
@@ -23,7 +23,7 @@ architecture from_verilog of ff_sync is
   signal sync_reg : std_logic;  -- Declared at ff_sync.v:24
 begin
   out_sig <= out_sig_Reg;
-  
+
   -- Generated from always process in ff_sync (ff_sync.v:25)
   process (clk, rst_p) is
     variable Verilog_Assign_Tmp_0 : unsigned(1 downto 0);
@@ -38,4 +38,3 @@ begin
     end if;
   end process;
 end architecture;
-

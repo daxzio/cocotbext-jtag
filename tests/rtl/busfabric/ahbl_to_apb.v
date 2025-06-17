@@ -28,7 +28,7 @@ module ahbl_to_apb #(
 	output reg  [W_DATA-1:0]  apbm_pwdata,
 	input wire                apbm_pready,
 	input wire  [W_DATA-1:0]  apbm_prdata,
-	input wire                apbm_pslverr 
+	input wire                apbm_pslverr
 );
 
 // Transfer state machine

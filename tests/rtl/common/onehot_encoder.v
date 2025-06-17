@@ -39,4 +39,3 @@ always @ (*) begin: encode
 end
 
 endmodule
-

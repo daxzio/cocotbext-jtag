@@ -5,8 +5,8 @@
 
 // ALU operation selectors
 
-localparam ALUOP_ADD     = 6'h00; 
-localparam ALUOP_SUB     = 6'h01; 
+localparam ALUOP_ADD     = 6'h00;
+localparam ALUOP_SUB     = 6'h01;
 localparam ALUOP_LT      = 6'h02;
 localparam ALUOP_LTU     = 6'h04;
 localparam ALUOP_AND     = 6'h06;

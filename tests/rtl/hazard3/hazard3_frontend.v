@@ -228,7 +228,7 @@ end else begin: no_btb
 // 		btb_target_addr = {W_ADDR{1'b0}};
 // 		btb_valid = 1'b0;
 // 	end
-    
+
     assign btb_src_addr = {W_ADDR{1'b0}};
     assign btb_target_addr = {W_ADDR{1'b0}};
     assign btb_valid = 1'b0;
@@ -243,7 +243,7 @@ endgenerate
 // Note this assumes the BTB target has not changed by the time the predicted
 // branch arrives at decode! This is always true because the only way for the
 // target address to change is when an older branch is taken, which would
-// flush the younger predicted-taken branch before it reaches decode. 
+// flush the younger predicted-taken branch before it reaches decode.
 
 assign btb_target_addr_out = btb_target_addr;
 
@@ -412,7 +412,7 @@ always @ (posedge clk or negedge rst_n) begin
 		end else if (mem_addr_vld && mem_addr_rdy) begin
 			if (|EXTENSION_C) begin
 				// If a predicted-taken branch instruction only spans the first
-				// half of a word, need to flag the second half as invalid. 
+				// half of a word, need to flag the second half as invalid.
 				mem_data_hwvld <= mem_aph_hwvld & {
 					!(|BRANCH_PREDICTOR && btb_match_now && (btb_src_addr[1] == btb_src_size)),
 					1'b1

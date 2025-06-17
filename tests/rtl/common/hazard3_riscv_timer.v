@@ -43,12 +43,12 @@ localparam ADDR_MTIMECMPH = 16'h0014;
 wire tick_event;
 // 	wire tick_nrz_sync;
 // 	reg tick_nrz_prev;
-// 
+//
 // generate
 // if (TICK_IS_NRZ) begin: edge_detect
-// 
+//
 // // 	wire tick_nrz_sync;
-// 
+//
 // 	hazard3_sync_1bit tick_sync_u (
 // 		.clk    (clk),
 // 		.rst_n  (rst_n),
@@ -56,7 +56,7 @@ wire tick_event;
 // 		.i      (tick),
 // 		.o      (tick_nrz_sync)
 // 	);
-// 
+//
 // // 	reg tick_nrz_prev;
 // 	always @ (posedge clk or negedge rst_n) begin
 // 		if (!rst_n) begin
@@ -65,9 +65,9 @@ wire tick_event;
 // 			tick_nrz_prev <= tick_nrz_sync;
 // 		end
 // 	end
-// 
+//
 // 	assign tick_event = tick_nrz_sync ^ tick_nrz_sync_prev;
-// 
+//
 // end else begin: no_edge_detect
 
 	assign tick_event = tick;

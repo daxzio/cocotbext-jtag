@@ -10,7 +10,7 @@ entity dut is
     tdo  : out std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 architecture tb of dut is
     signal d_userData : unsigned(31 downto 0);
@@ -29,13 +29,13 @@ architecture tb of dut is
         userOp : out unsigned(7 downto 0);
         userOp_ready : out std_logic
       );
-    end component; 
+    end component;
 
 begin
 
 
     wtrst <= trst;
-    
+
     i_jtaglet: jtaglet
       port map (
         tck => tck,
@@ -48,7 +48,7 @@ begin
         userOp => open,
         userOp_ready => open
       );
-      
+
       process (tck, trst) is
       begin
           if trst = '0' then

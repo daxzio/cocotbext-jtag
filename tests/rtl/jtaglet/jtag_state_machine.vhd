@@ -35,7 +35,7 @@ entity jtag_state_machine is
     tms : in std_logic;
     trst : in std_logic
   );
-end entity; 
+end entity;
 
 -- Generated from Verilog module jtag_state_machine (jtag_state_machine.v:22)
 --   CAPTURE_DR = 3
@@ -78,7 +78,7 @@ begin
   tmp_ivl_24 <= X"f";
   tmp_ivl_4 <= X"3";
   tmp_ivl_8 <= X"a";
-  
+
   -- Generated from always process in jtag_state_machine (jtag_state_machine.v:56)
   process (tck, trst) is
   begin
@@ -188,4 +188,3 @@ begin
     end if;
   end process;
 end architecture;
-

@@ -38,7 +38,7 @@
 //   0  |  X   |  X   |  1   |  1   | Hi-Z    | Hi-Z
 //
 // Read timing: assert address, CE, OE and byte enables, and wait for 10 ns
-// Write timing: assert address, CE, byte enables, data. Wait 3 ns. 
+// Write timing: assert address, CE, byte enables, data. Wait 3 ns.
 //  Assert WE. Wait 7 ns.
 // Data sampled by real SRAM on WE rising edge, (deassertion; active low!)
 // but to avoid races due to lack of datapath delay,
@@ -80,7 +80,7 @@ always @ (*) begin: readport
 	for (i = 0; i < W_BYTES; i = i + 1) begin
 		dq_r[i * 8 +: 8] = !ce_n && !oe_n && we_n && !ben_n[i] ?
 			mem[addr][i * 8 +: 8] : 8'hz;
-	end 	
+	end
 end
 
 always @ (negedge we_n) begin: writeport

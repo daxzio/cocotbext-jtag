@@ -1,6 +1,6 @@
 name: Setup GHDL
 
-on: 
+on:
   workflow_call:
     inputs:
       githash:
@@ -14,7 +14,7 @@ on:
       cache_key:
         description: "The Cache Key"
         value: ${{ jobs.build.outputs.output1 }}
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,7 +26,7 @@ jobs:
         if: ${{ inputs.githash != '' }}
         run: |
           echo "GITHEAD=${{ inputs.githash }}" >> $GITHUB_ENV
-      - name: Setup GHDL 
+      - name: Setup GHDL
         run: |
           export GITPATH=https://github.com/ghdl/ghdl.git
           if [ -z ${GITHEAD+x} ]; then
@@ -43,7 +43,7 @@ jobs:
           path: ${{ env.CACHE_DIR }}
           key: ${{ env.CACHE_KEY }}
       - if: ${{ steps.git-cache.outputs.cache-hit != 'true' }}
-        name: Compile GHDL 
+        name: Compile GHDL
         run: |
           mkdir -p ${{ env.CACHE_DIR }}
           git clone ${{ env.GITPATH }}

@@ -16,22 +16,22 @@ module dut (
 
     always @(posedge tck or negedge trst) begin
         if (!trst) begin
-            f_userData[0] = 32'he6712945; 
-            f_userData[1] = 32'h46834257; 
-            f_userData[2] = 32'h98754ae7; 
+            f_userData[0] = 32'he6712945;
+            f_userData[1] = 32'h46834257;
+            f_userData[2] = 32'h98754ae7;
         end else begin
             if (d_userData[0] != 0) begin
                 f_userData[0] = d_userData[0];
-            end 
+            end
             if (d_userData[1] != 0) begin
                 f_userData[1] = d_userData[1];
-            end 
+            end
             if (d_userData[2] != 0) begin
                 f_userData[2] = d_userData[2];
-            end 
+            end
         end
     end
-    
+
 
     jtaglet # (
           .IR_LEN     (4)
@@ -48,7 +48,7 @@ module dut (
         , .userOp ( )
         , .userOp_ready ( )
     );
-    
+
     jtaglet # (
           .IR_LEN     (5)
         , .ID_PARTVER (4'hc)
@@ -64,7 +64,7 @@ module dut (
         , .userOp ( )
         , .userOp_ready ( )
     );
-    
+
     jtaglet # (
           .IR_LEN     (4)
         , .ID_PARTVER (4'ha)
@@ -80,7 +80,6 @@ module dut (
         , .userOp ( )
         , .userOp_ready ( )
     );
-   
+
 
 endmodule
-

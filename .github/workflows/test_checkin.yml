@@ -1,7 +1,7 @@
 name: Test Cocotbext Jtag
 
-on: 
-  push: 
+on:
+  push:
   pull_request:
   schedule:
     - cron: '0 1 * * 0'
@@ -9,8 +9,8 @@ jobs:
   run_lint:
     strategy:
       fail-fast: false # So that one fail doesn't stop remaining tests
-    runs-on: ubuntu-latest      
-    
+    runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -25,7 +25,7 @@ jobs:
         continue-on-error: true
         run: |
           mypy cocotbext
- 
+
 #   build_ghdl_linux:
 #     #uses: daxzio/setup-eda/.github/workflows/setup_ghdl.yml@main
 #     uses: ./.github/workflows/setup_ghdl.yml
@@ -92,14 +92,14 @@ jobs:
       - name: Run Tests verilog
         if: matrix.target == 'icarus'
         run: |
-          unset PYTHONHOME 
+          unset PYTHONHOME
           make verilog SIM=${{ matrix.target }}
       - name: Run Tests VHDL
         if: matrix.target == 'ghdl'
         run: |
-          unset PYTHONHOME 
+          unset PYTHONHOME
           make vhdl SIM=${{ matrix.target }}
-    
+
   build_code_main:
 
     strategy:
@@ -159,14 +159,14 @@ jobs:
       - name: Run Tests verilog
         if: matrix.target == 'icarus'
         run: |
-          unset PYTHONHOME 
+          unset PYTHONHOME
           make verilog SIM=${{ matrix.target }}
       - name: Run Tests VHDL
         if: matrix.target == 'ghdl'
         run: |
-          unset PYTHONHOME 
+          unset PYTHONHOME
           make vhdl SIM=${{ matrix.target }}
-    
+
   pypy_release:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     runs-on: ubuntu-latest

@@ -32,7 +32,7 @@ See the `tests` directory for complete testbenches using these modules.
 
 ### JTAG Bus
 
-The `JTAGBus` is used to map to a JTAG interface on the `dut`.  These hold instances of bus objects for the individual channels, which are currently extensions of `cocotb_bus.bus.Bus`.  Class methods `from_entity` and `from_prefix` are provided to facilitate signal default name matching. 
+The `JTAGBus` is used to map to a JTAG interface on the `dut`.  These hold instances of bus objects for the individual channels, which are currently extensions of `cocotb_bus.bus.Bus`.  Class methods `from_entity` and `from_prefix` are provided to facilitate signal default name matching.
 
 #### Required:
 * _tck_
@@ -45,7 +45,7 @@ The `JTAGBus` is used to map to a JTAG interface on the `dut`.  These hold insta
 
 ### JTAG Driver
 
-The `JTAGDriver` class implement a JTAG driver and is capable of generating read and write operations against JTAG devices, either singularly or in a chain.  
+The `JTAGDriver` class implement a JTAG driver and is capable of generating read and write operations against JTAG devices, either singularly or in a chain.
 
 To use these modules, import the one you need and connect it to the DUT:
 
@@ -74,7 +74,7 @@ Once the module is instantiated, read and write operations can be initiated in a
 * `reset_finished()`: Asyn wait until reset is finished
 * `reset_fsm()`: Send 5 _tck_ pulses while _tms_ is held high in `JTAGBus`, this resets the finite state machine inside a JTAG TAP
 * `send_val(addr, val, device, write)`: Send _addr_ to _device_ (default: `0`). The _val_ is used to write if _write_ is True or verify against if _write_ is False
-* `write(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`). 
+* `write(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`).
 * `read(addr, val=None, device=0)`: Read from _addr_ of _device_ (default: `0`). If _val_ present verify against returned value.
 * `read_idcode(device)`: Read device number _device_ and confirm it matched the IDCODE set for that device
 
@@ -100,14 +100,14 @@ First inherit from the base class, , and after add all the other IR regiters usi
 
 * `add_jtag_reg(name, width, address)`: Add an IR register to `JTAGDevice`. _name_ is a string, _width_ is the DR shift width of the register and the address, which should be with in the range if the _ir_len_ of `JTAGDevice`
 
-            
+
 This results in a `JTAGDevice` that has 4 IR register defined:
 
 
-    0x08: USERDATA[31:0] 
-    0x09: USEROP[7:0] 
-    0x1e: IDCODE[31:0] 
-    0x1f: BYPASS[0:0] 
+    0x08: USERDATA[31:0]
+    0x09: USEROP[7:0]
+    0x1e: IDCODE[31:0]
+    0x1f: BYPASS[0:0]
 
 
 Multiple devices inside the JTAG chain:
@@ -121,9 +121,3 @@ Multiple devices inside the JTAG chain:
             self.jtag = JTAGDriver(bus)
             self.jtag.add_device(J1JTAGDevice())
             self.jtag.add_device(J2JTAGDevice())
-
-
-
-
-
-

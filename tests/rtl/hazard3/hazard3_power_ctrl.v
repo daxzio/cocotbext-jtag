@@ -91,7 +91,7 @@ always @ (posedge clk_always_on or negedge rst_n) begin
 					// Stay awake until it is safe to power down (i.e. until our
 					// instruction fetch goes quiet).
 					state <= S_AWAKE;
-				end					
+				end
 			end else begin
 				// No power state change. Just sit with the pipeline stalled.
 				state <= S_AWAKE;
