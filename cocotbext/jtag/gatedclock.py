@@ -178,8 +178,8 @@ class GatedClock(Clock):
         #                 await timer_low
         #                 self.signal.value = self.gated
         #                 await timer_high
-        timer_high = Timer(t_high)
-        timer_low = Timer(self.period - t_high)
+        timer_high = Timer(t_high, unit=self.unit)
+        timer_low = Timer(self.period - t_high, unit=self.unit)
         if start_high:
             self.signal.value = self.gated
             await timer_high
