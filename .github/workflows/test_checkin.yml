@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
@@ -50,7 +50,7 @@ jobs:
     needs: [build_icarus_linux]
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Report Environment
         run: |
           echo "Runing tests with env set to : ${CI_TARGET}"
@@ -105,7 +105,7 @@ jobs:
     strategy:
       fail-fast: false # So that one fail doesn't stop remaining tests
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 #         target: [icarus, verilator, ghdl]
         target: [icarus, ghdl]
     runs-on: ubuntu-latest
@@ -219,7 +219,7 @@ jobs:
           python -m pip install --upgrade cocotbext-uart
           python -m pip install .
           python -m pip uninstall -y cocotb cocotb-bus
-          python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git@1.9.2
+          python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git@v1.9.2
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
       - name: Run Tests verilog
         if: matrix.target == 'icarus'
