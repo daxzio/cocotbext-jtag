@@ -29,15 +29,39 @@
 
 from decimal import Decimal
 from fractions import Fraction
-from typing import Union
+from typing import Literal, Union
 
+import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer
 
-# try:
-#     from cocotb.simulator import clock_create
-# except ImportError:
-#     pass
+# Version detection (Blender style)
+COCOTB_VERSION = tuple(int(x) for x in cocotb.__version__.split(".")[:2])
+
+# TimeUnit type handling
+if COCOTB_VERSION >= (2, 1):
+    # cocotb 2.1+: Use typing.Literal directly
+    TimeUnit = Literal["step", "fs", "ps", "ns", "us", "ms", "sec"]
+elif COCOTB_VERSION >= (2, 0):
+    # cocotb 2.0.x: Import from cocotb._typing
+    from cocotb._typing import TimeUnit
+else:
+    # cocotb 1.9.2: Use str
+    TimeUnit = str  # type: ignore
+
+# LogicObject type handling
+if COCOTB_VERSION >= (2, 0):
+    from cocotb.handle import LogicObject
+else:
+    from cocotb.handle import ModifiableObject as LogicObject  # type: ignore
+
+
+def _create_timer(delay: Union[float, Fraction, Decimal], unit: str) -> Timer:
+    """Create a Timer with appropriate parameter name for the cocotb version."""
+    if COCOTB_VERSION >= (2, 0):
+        return Timer(delay, unit=unit)
+    else:
+        return Timer(delay, units=unit)
 
 
 class GatedClock(Clock):
@@ -72,9 +96,9 @@ class GatedClock(Clock):
 
         async def custom_clock():
             # pre-construct triggers for performance
-            high_time = Timer(high_delay, units="ns")
-            low_time = Timer(low_delay, units="ns")
-            await Timer(initial_delay, units="ns")
+            high_time = Timer(high_delay, unit="ns")
+            low_time = Timer(low_delay, unit="ns")
+            await Timer(initial_delay, unit="ns")
             while True:
                 dut.clk.value = 1
                 await high_time
@@ -91,16 +115,16 @@ class GatedClock(Clock):
         async def custom_clock():
             while True:
                 dut.clk.value = 1
-                await Timer(high_delay, units="ns")
+                await Timer(high_delay, unit="ns")
                 dut.clk.value = 0
-                await Timer(low_delay, units="ns")
+                await Timer(low_delay, unit="ns")
 
 
         high_delay = low_delay = 100
         await cocotb.start(custom_clock())
-        await Timer(1000, units="ns")
+        await Timer(1000, unit="ns")
         high_delay = low_delay = 10  # change the clock speed
-        await Timer(1000, units="ns")
+        await Timer(1000, unit="ns")
 
     .. versionchanged:: 1.5
         Support ``'step'`` as the *units* argument to mean "simulator time step".
@@ -111,29 +135,36 @@ class GatedClock(Clock):
 
     def __init__(
         self,
-        signal,
+        signal: LogicObject,
         period: Union[float, Fraction, Decimal],
-        units: str = "step",
-        impl: str = "auto",
+        units: TimeUnit = "step",
+        impl: Union[str, None] = None,
         gated: bool = True,
     ):
+        """Initialize GatedClock, handling both cocotb 1.9.2 and 2.0.0."""
+        self._unit = units  # Store units for later use in Timer calls
 
-        try:  # this is new on 2.0.0
+        if COCOTB_VERSION >= (2, 0):
+            # cocotb 2.0.0+: Clock accepts 'unit' parameter (singular) and 'impl'
             Clock.__init__(
                 self,
                 signal,
                 period,
-                units,
-                impl,
+                unit=units,
+                impl=impl,
             )
-        except TypeError:
+        else:
+            # cocotb 1.9.2: Clock accepts 'units' parameter (plural) and no impl
             Clock.__init__(
                 self,
                 signal,
                 period,
-                units,
+                units=units,
             )
-            self.impl = impl
+            # Store impl manually for 1.9.2
+            if impl is not None:
+                self.impl = impl
+
         self.gated = gated
 
     async def start(self, start_high: bool = True) -> None:
@@ -154,32 +185,9 @@ class GatedClock(Clock):
 
         t_high = self.period // 2
 
-        #         if self.impl == "gpi":
-        #             raise Exception("Unimplemented")
-        #             clkobj = clock_create(self.signal._handle)
-        #             clkobj.start(self.period, t_high, start_high)
-        #
-        #             try:
-        #                 # The clock is meant to toggle forever, so awaiting this should
-        #                 # never return (except in case of CancelledError).
-        #                 # Await on an event that's never set.
-        #                 e = Event()
-        #                 await e.wait()
-        #             finally:
-        #                 clkobj.stop()
-        #         else:
-        #             timer_high = Timer(t_high)
-        #             timer_low = Timer(self.period - t_high)
-        #             if start_high:
-        #                 self.signal.value = self.gated
-        #                 await timer_high
-        #             while True:
-        #                 self.signal.value = 0
-        #                 await timer_low
-        #                 self.signal.value = self.gated
-        #                 await timer_high
-        timer_high = Timer(t_high, unit=self.unit)
-        timer_low = Timer(self.period - t_high, unit=self.unit)
+        timer_high = _create_timer(t_high, self._unit)
+        timer_low = _create_timer(self.period - t_high, self._unit)
+
         if start_high:
             self.signal.value = self.gated
             await timer_high
