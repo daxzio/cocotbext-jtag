@@ -49,6 +49,25 @@ class JTAGReg:
 
 
 class JTAGDevice:
+    """Base class for JTAG device models.
+
+    This class represents a JTAG device in the chain and defines its
+    instruction register layout and capabilities. Custom device models
+    should inherit from this class.
+
+    Args:
+        name: Device name for identification
+        idcode: 32-bit JTAG IDCODE for device identification
+        ir_len: Instruction register length in bits
+        init: Whether to initialize with BYPASS register (default: True)
+
+    Example:
+        >>> class MyJTAGDevice(JTAGDevice):
+        ...     def __init__(self):
+        ...         super().__init__(name="MyDevice", idcode=0x12345678, ir_len=4)
+        ...         self.add_jtag_reg("IDCODE", 32, 0xE)
+        ...         self.add_jtag_reg("DATA", 32, 0x1)
+    """
 
     count: int = 0
 
@@ -78,6 +97,21 @@ class JTAGDevice:
         address: int = -1,
         write: bool = False,
     ) -> None:
+        """Add an instruction register to the device.
+
+        Args:
+            name: Register name (string)
+            width: Data register width in bits
+            address: Instruction register address (must fit within ir_len)
+            write: Whether register supports write operations (default: False)
+
+        Raises:
+            Exception: If address is out of range for the instruction register length
+
+        Example:
+            >>> device.add_jtag_reg("IDCODE", 32, 0xE)
+            >>> device.add_jtag_reg("DATA", 32, 0x1, write=True)
+        """
         if not -1 == address:
             if address >= 2**self.ir_len:
                 raise Exception(

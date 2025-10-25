@@ -45,7 +45,7 @@ The `JTAGBus` is used to map to a JTAG interface on the `dut`.  These hold insta
 
 ### JTAG Driver
 
-The `JTAGDriver` class implement a JTAG driver and is capable of generating read and write operations against JTAG devices, either singularly or in a chain.
+The `JTAGDriver` class implements a JTAG driver and is capable of generating read and write operations against JTAG devices, either singularly or in a chain.
 
 To use these modules, import the one you need and connect it to the DUT:
 
@@ -71,7 +71,7 @@ Once the module is instantiated, read and write operations can be initiated in a
 
 * `add_device(device)`: Add device to jtag chain, must be of type `JTAGDevice`
 * `set_reset(num)`: Reset for _num_ if _trst_ is present in `JTAGBus`, raise warning if _trst_ is not present
-* `reset_finished()`: Asyn wait until reset is finished
+* `reset_finished()`: Async wait until reset is finished
 * `reset_fsm()`: Send 5 _tck_ pulses while _tms_ is held high in `JTAGBus`, this resets the finite state machine inside a JTAG TAP
 * `send_val(addr, val, device, write)`: Send _addr_ to _device_ (default: `0`). The _val_ is used to write if _write_ is True or verify against if _write_ is False
 * `write(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`).
@@ -83,9 +83,9 @@ Once the module is instantiated, read and write operations can be initiated in a
 
 `JTAGDriver` needs to be told what devices are in the JTAG chain it is communicating with inside the `dut`. A `JTAGDevice` needs to be defined for this purpose or a device that inherits from this base class.
 
-A `JTAGDevice` needs a _name_, _idcode_ and _ir_len_.  It also seens to have the IR Register map defined and the width of the the register.  'BYPASS' is prepopulated in the base class at last address in the IRLEN address map.
+A `JTAGDevice` needs a _name_, _idcode_ and _ir_len_.  It also needs to have the IR Register map defined and the width of the register.  'BYPASS' is prepopulated in the base class at last address in the IRLEN address map.
 
-First inherit from the base class, , and after add all the other IR regiters using the _add_jtag_reg_ method.
+First inherit from the base class, and then add all the other IR registers using the _add_jtag_reg_ method.
 
 
     from cocotbext.jtag import JTAGDevice
@@ -98,7 +98,7 @@ First inherit from the base class, , and after add all the other IR regiters usi
             self.add_jtag_reg('USEROP', 8, 0x9)
             self.idle_delay = 6
 
-* `add_jtag_reg(name, width, address)`: Add an IR register to `JTAGDevice`. _name_ is a string, _width_ is the DR shift width of the register and the address, which should be with in the range if the _ir_len_ of `JTAGDevice`
+* `add_jtag_reg(name, width, address)`: Add an IR register to `JTAGDevice`. _name_ is a string, _width_ is the DR shift width of the register and the address, which should be within the range of the _ir_len_ of `JTAGDevice`
 
 
 This results in a `JTAGDevice` that has 4 IR register defined:

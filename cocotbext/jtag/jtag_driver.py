@@ -44,6 +44,27 @@ from warnings import warn
 
 
 class JTAGDriver(CocoTBExtLogger):
+    """JTAG TAP Controller Driver for cocotb.
+
+    This class implements a complete JTAG Test Access Port (TAP) controller
+    with state machine support. It can perform read and write operations
+    against single or multiple JTAG devices in a chain.
+
+    Args:
+        bus: JTAG bus interface object containing TCK, TMS, TDI, TDO signals
+        period: Clock period in time units (default: 100)
+        unit: Time units - "ns", "us", "ms", etc. (default: "ns")
+        logging_enabled: Enable debug logging (default: True)
+
+    Example:
+        >>> from cocotbext.jtag import JTAGDriver, JTAGBus, JTAGDevice
+        >>>
+        >>> bus = JTAGBus(dut)
+        >>> jtag = JTAGDriver(bus, period=100, units="ns")
+        >>> jtag.add_device(MyJTAGDevice())
+        >>> await jtag.read_idcode()
+    """
+
     def __init__(
         self,
         bus: JTAGBus,
@@ -132,9 +153,28 @@ class JTAGDriver(CocoTBExtLogger):
         return self.devices[self.device]
 
     def add_device(self, device: JTAGDevice) -> None:
+        """Add a JTAG device to the chain.
+
+        Args:
+            device: JTAGDevice instance to add to the chain
+
+        Example:
+            >>> jtag.add_device(MyJTAGDevice())
+        """
         self.devices.append(device)
 
     async def set_reset(self, num: int = 10) -> None:
+        """Assert JTAG reset for specified duration.
+
+        Args:
+            num: Reset duration in clock periods (default: 10)
+
+        Note:
+            Issues a warning if TRST signal is not present in the bus.
+
+        Example:
+            >>> await jtag.set_reset(20)  # Reset for 20 clock periods
+        """
         if hasattr(self, "reset"):
             self.log.debug("JTAG Resetting")
             self.tx_fsm.reset_state()
@@ -290,6 +330,18 @@ class JTAGDriver(CocoTBExtLogger):
         ret_val: Union[int, None] = None,
         device: int = 0,
     ) -> None:
+        """Write a value to a JTAG register.
+
+        Args:
+            addr: Register name (string) or address (int)
+            val: Value to write
+            ret_val: Expected return value (for verification)
+            device: Device index in chain (default: 0)
+
+        Example:
+            >>> await jtag.write("DATA", 0x12345678)
+            >>> await jtag.write(0x1, 0xDEADBEEF, device=1)
+        """
         await self.send_val(addr, val, device, write=True)
         self.suppress_log = False
 
@@ -302,6 +354,20 @@ class JTAGDriver(CocoTBExtLogger):
     async def read(
         self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
     ):
+        """Read a value from a JTAG register.
+
+        Args:
+            addr: Register name (string) or address (int)
+            val: Expected value for verification (optional)
+            device: Device index in chain (default: 0)
+
+        Returns:
+            The value read from the register
+
+        Example:
+            >>> value = await jtag.read("DATA")
+            >>> await jtag.read("IDCODE", 0x12345678)  # Verify expected value
+        """
         await self.send_val(addr, val, device, write=False)
         return self.ret_val
 
