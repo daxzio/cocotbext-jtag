@@ -107,7 +107,7 @@ jobs:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
 #         target: [icarus, verilator, ghdl]
-        target: [icarus]
+        target: [icarus, ghdl]
     runs-on: ubuntu-latest
 #     needs: [run_lint, build_ghdl_linux, build_icarus_linux, build_verilator_linux]
     needs: [build_icarus_linux]
@@ -154,7 +154,7 @@ jobs:
           python -m pip install .
           python -m pip uninstall -y cocotb cocotb-bus
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git
-          python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
+#           python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
       - name: Run Tests verilog
         if: matrix.target == 'icarus'
         run: |
@@ -221,7 +221,7 @@ jobs:
           python -m pip install .
           python -m pip uninstall -y cocotb cocotb-bus
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git@${{ matrix.cocotb-version }}
-          python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
+#           python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
       - name: Run Tests verilog
         if: matrix.target == 'icarus'
         run: |

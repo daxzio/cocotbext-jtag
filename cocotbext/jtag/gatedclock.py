@@ -56,14 +56,6 @@ else:
     from cocotb.handle import ModifiableObject as LogicObject  # type: ignore
 
 
-def _create_timer(delay: Union[float, Fraction, Decimal], unit: str) -> Timer:
-    """Create a Timer with appropriate parameter name for the cocotb version."""
-    if COCOTB_VERSION >= (2, 0):
-        return Timer(delay, unit=unit)
-    else:
-        return Timer(delay, units=unit)
-
-
 class GatedClock(Clock):
     r"""Simple 50:50 duty cycle clock driver.
 
@@ -185,8 +177,13 @@ class GatedClock(Clock):
 
         t_high = self.period // 2
 
-        timer_high = _create_timer(t_high, self._unit)
-        timer_low = _create_timer(self.period - t_high, self._unit)
+        # Create Timer objects with appropriate parameter name for the cocotb version
+        if COCOTB_VERSION >= (2, 0):
+            timer_high = Timer(t_high, unit=self._unit)
+            timer_low = Timer(self.period - t_high, unit=self._unit)
+        else:
+            timer_high = Timer(t_high, units=self._unit)
+            timer_low = Timer(self.period - t_high, units=self._unit)
 
         if start_high:
             self.signal.value = self.gated

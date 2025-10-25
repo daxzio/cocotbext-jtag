@@ -22,7 +22,8 @@ THE SOFTWARE.
 
 """
 
-from cocotb_bus.bus import Bus
+# from cocotb_bus.bus import Bus
+from .bus import Bus
 from typing import Union
 
 
