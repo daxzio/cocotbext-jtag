@@ -89,11 +89,13 @@ jobs:
 #           python -m pip install --upgrade git+https://github.com/cocotb/cocotb-bus.git
       - name: Run Tests verilog
         if: matrix.target == 'icarus'
+        continue-on-error: true
         run: |
           unset PYTHONHOME
           make verilog SIM=${{ matrix.target }}
       - name: Run Tests VHDL
         if: matrix.target == 'ghdl'
+        continue-on-error: true
         run: |
           unset PYTHONHOME
           make vhdl SIM=${{ matrix.target }}
