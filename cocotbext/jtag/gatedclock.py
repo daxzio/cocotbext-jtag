@@ -29,7 +29,7 @@
 
 from decimal import Decimal
 from fractions import Fraction
-from typing import Literal, Union
+from typing import Any, Coroutine, Literal, Union, TYPE_CHECKING
 
 import cocotb
 from cocotb.clock import Clock
@@ -39,15 +39,20 @@ from cocotb.triggers import Timer
 COCOTB_VERSION = tuple(int(x) for x in cocotb.__version__.split(".")[:2])
 
 # TimeUnit type handling
-if COCOTB_VERSION >= (2, 1):
-    # cocotb 2.1+: Use typing.Literal directly
+if TYPE_CHECKING:
+    # For type checking, use the most specific type
     TimeUnit = Literal["step", "fs", "ps", "ns", "us", "ms", "sec"]
-elif COCOTB_VERSION >= (2, 0):
-    # cocotb 2.0.x: Import from cocotb._typing
-    from cocotb._typing import TimeUnit
 else:
-    # cocotb 1.9.2: Use str
-    TimeUnit = str  # type: ignore
+    # Runtime: choose based on cocotb version
+    if COCOTB_VERSION >= (2, 1):
+        # cocotb 2.1+: Use typing.Literal directly
+        TimeUnit = Literal["step", "fs", "ps", "ns", "us", "ms", "sec"]
+    elif COCOTB_VERSION >= (2, 0):
+        # cocotb 2.0.x: Import from cocotb._typing
+        from cocotb._typing import TimeUnit
+    else:
+        # cocotb 1.9.2: Use str
+        TimeUnit = str  # type: ignore
 
 # LogicObject type handling
 if COCOTB_VERSION >= (2, 0):
@@ -134,7 +139,7 @@ class GatedClock(Clock):
         gated: bool = True,
     ):
         """Initialize GatedClock, handling both cocotb 1.9.2 and 2.0.0."""
-        self._unit = units  # Store units for later use in Timer calls
+        self._unit = units  # Store units for cocotb 1.9.2 compatibility
 
         if COCOTB_VERSION >= (2, 0):
             # cocotb 2.0.0+: Clock accepts 'unit' parameter (singular) and 'impl'
@@ -142,8 +147,8 @@ class GatedClock(Clock):
                 self,
                 signal,
                 period,
-                unit=units,
-                impl=impl,
+                unit=units,  # type: ignore
+                impl=impl,  # type: ignore
             )
         else:
             # cocotb 1.9.2: Clock accepts 'units' parameter (plural) and no impl
@@ -151,15 +156,15 @@ class GatedClock(Clock):
                 self,
                 signal,
                 period,
-                units=units,
+                units=units,  # type: ignore
             )
             # Store impl manually for 1.9.2
             if impl is not None:
-                self.impl = impl
+                object.__setattr__(self, "impl", impl)
 
         self.gated = gated
 
-    async def start(self, start_high: bool = True) -> None:
+    def start(self, start_high: bool = True) -> Coroutine[Any, Any, None]:  # type: ignore
         r"""Clocking coroutine.  Start driving your clock by :func:`cocotb.start`\ ing a
         call to this.
 
@@ -168,28 +173,32 @@ class GatedClock(Clock):
                 for the first half of the period.
                 Default is ``True``.
 
-                .. versionadded:: 1.3
+                    .. versionadded:: 1.3
 
-        .. versionchanged:: 2.0
-            Removed ``cycles`` arguments for toggling for a finite amount of cyles.
-            Use ``kill()`` on the clock task instead, or implement manually.
+                    .. versionchanged:: 2.0
+                        Removed ``cycles`` arguments for toggling for a finite amount of cyles.
+                        Use ``kill()`` on the clock task instead, or implement manually.
         """
 
-        t_high = self.period // 2
+        async def drive() -> None:
+            t_high = self.period // 2
+            t_low = float(self.period) - float(t_high)
 
-        # Create Timer objects with appropriate parameter name for the cocotb version
-        if COCOTB_VERSION >= (2, 0):
-            timer_high = Timer(t_high, unit=self._unit)
-            timer_low = Timer(self.period - t_high, unit=self._unit)
-        else:
-            timer_high = Timer(t_high, units=self._unit)
-            timer_low = Timer(self.period - t_high, units=self._unit)
+            # Create Timer objects with appropriate parameter name for the cocotb version
+            if COCOTB_VERSION >= (2, 0):
+                timer_high = Timer(t_high, unit=self._unit)  # type: ignore
+                timer_low = Timer(t_low, unit=self._unit)  # type: ignore
+            else:
+                timer_high = Timer(t_high, units=self._unit)  # type: ignore
+                timer_low = Timer(t_low, units=self._unit)  # type: ignore
 
-        if start_high:
-            self.signal.value = self.gated
-            await timer_high
-        while True:
-            self.signal.value = 0
-            await timer_low
-            self.signal.value = self.gated
-            await timer_high
+            if start_high:
+                self.signal.value = self.gated
+                await timer_high
+            while True:
+                self.signal.value = 0
+                await timer_low
+                self.signal.value = self.gated
+                await timer_high
+
+        return drive()

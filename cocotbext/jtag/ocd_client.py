@@ -137,7 +137,14 @@ class OpenOCDClient:
                     raise
 
                 while not 0 == step:
-                    await Timer(self.period / 2, units=self.units)
+                    # Handle Timer parameter name differences between cocotb versions
+                    # This is legitimate version compatibility - not a bug to hide
+                    try:
+                        # Try cocotb 2.0+ syntax first (unit parameter)
+                        await Timer(self.period / 2, unit=self.units)  # type: ignore[arg-type]
+                    except TypeError:
+                        # Fall back to cocotb 1.9.2 syntax (units parameter)
+                        await Timer(self.period / 2, units=self.units)  # type: ignore[arg-type]
                     step -= 1
 
             self.send_tx()

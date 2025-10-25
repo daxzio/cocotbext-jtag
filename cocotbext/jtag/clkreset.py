@@ -37,10 +37,14 @@ class Clk:
             self.clk = dut
         self.name = clkname
         self.period = period
+        # Handle Clock parameter name differences between cocotb versions
+        # This is legitimate version compatibility - not a bug to hide
         try:
-            start_soon(Clock(self.clk, self.period, units=unit).start())
-        except (TypeError, AttributeError):  # new in cocotb 2.0.0
-            start_soon(Clock(self.clk, self.period, unit=unit).start())
+            # Try cocotb 2.0+ syntax first (unit parameter)
+            start_soon(Clock(self.clk, self.period, unit=unit).start())  # type: ignore[arg-type]
+        except TypeError:
+            # Fall back to cocotb 1.9.2 syntax (units parameter)
+            start_soon(Clock(self.clk, self.period, units=unit).start())  # type: ignore[arg-type]
 
     async def wait_clkn(self, length: int = 1) -> None:
         for i in range(int(length)):

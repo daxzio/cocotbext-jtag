@@ -24,7 +24,10 @@ THE SOFTWARE.
 
 # from cocotb_bus.bus import Bus
 from .bus import Bus
-from typing import Union
+from typing import Union, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from cocotb.handle import LogicObject
 
 
 class JTAGBus(Bus):
@@ -37,6 +40,14 @@ class JTAGBus(Bus):
     _optional_signals: list = [
         "trst",
     ]
+
+    # Type annotations for dynamically created attributes
+    if TYPE_CHECKING:
+        tck: LogicObject
+        tms: LogicObject
+        tdi: LogicObject
+        tdo: LogicObject
+        trst: LogicObject
 
     def __init__(
         self,

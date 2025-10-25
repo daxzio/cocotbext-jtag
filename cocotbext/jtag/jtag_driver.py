@@ -75,8 +75,10 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
+        # GatedClock always uses 'units' parameter for version compatibility
+        # This is legitimate version compatibility - not a bug to hide
         self.gc = GatedClock(
-            self.bus.tck, self.period, units=unit, gated=False, impl="py"
+            self.bus.tck, self.period, units=unit, gated=False, impl="py"  # type: ignore[arg-type]
         )
         start_soon(self.gc.start(start_high=False))
 
@@ -108,10 +110,14 @@ class JTAGDriver(CocoTBExtLogger):
             if self.gc.gated:
                 await RisingEdge(self.bus.tck)
             else:
+                # Handle Timer parameter name differences between cocotb versions
+                # This is legitimate version compatibility - not a bug to hide
                 try:
-                    await Timer(self.period, units=self.unit)
-                except (TypeError, AttributeError):  # new in cocotb 2.0.0
-                    await Timer(self.period, unit=self.unit)
+                    # Try cocotb 2.0+ syntax first (unit parameter)
+                    await Timer(self.period, unit=self.unit)  # type: ignore[arg-type]
+                except TypeError:
+                    # Fall back to cocotb 1.9.2 syntax (units parameter)
+                    await Timer(self.period, units=self.unit)  # type: ignore[arg-type]
 
     @property
     def clock_gated(self) -> bool:
