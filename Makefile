@@ -28,6 +28,9 @@ dist:
 	rm -rf CHANGELOG.txt
 	python setup.py sdist
 
+pre-commit:
+	pre-commit run --all-files
+
 GIT_TAG?=0.0.1
 VERSION_FILE?=`find . -name version.py`
 release:
