@@ -75,14 +75,14 @@ jobs:
           python -m pip uninstall -y cocotb
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git
       - name: Run Tests verilog
-        if: matrix.target == 'icarus'
-        continue-on-error: true
+        if: matrix.target == 'icarus' || matrix.target == 'verilator'
+        #continue-on-error: true
         run: |
           unset PYTHONHOME
           make verilog SIM=${{ matrix.target }}
       - name: Run Tests VHDL
         if: matrix.target == 'ghdl'
-        continue-on-error: true
+        #continue-on-error: true
         run: |
           unset PYTHONHOME
           make vhdl SIM=${{ matrix.target }}
@@ -133,7 +133,7 @@ jobs:
           python -m pip uninstall -y cocotb
           python -m pip install --upgrade git+https://github.com/cocotb/cocotb.git@${{ matrix.cocotb-version }}
       - name: Run Tests verilog
-        if: matrix.target == 'icarus'
+        if: matrix.target == 'icarus' || matrix.target == 'verilator'
         run: |
           unset PYTHONHOME
           make verilog SIM=${{ matrix.target }}
