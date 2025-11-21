@@ -26,7 +26,10 @@ import logging
 import datetime
 from random import seed, randint
 from math import ceil
-from typing import Union
+from typing import Union, cast
+from warnings import warn
+
+import cocotb
 from cocotb.triggers import RisingEdge
 from cocotb.triggers import FallingEdge
 from cocotb import start_soon
@@ -40,7 +43,25 @@ from .jtag_sm import JTAGTxSm, JTAGRxSm
 from .jtag_bus import JTAGBus
 from .jtag_device import JTAGDevice
 
-from warnings import warn
+# Compatibility imports for cocotb 2.0+
+try:
+    from cocotb._typing import TimeUnit
+except ImportError:
+    # cocotb 1.9.2 doesn't have TimeUnit
+    TimeUnit = str  # type: ignore[misc,assignment]
+
+
+# Detect cocotb version (similar to Blender module version checking)
+def _parse_version(version_str: str) -> tuple[int, ...]:
+    """Parse version string into tuple for comparison."""
+    try:
+        parts = version_str.split(".")
+        return tuple(int(x) for x in parts[:2] if x.isdigit())
+    except (ValueError, AttributeError):
+        return (0, 0)
+
+
+COCOTB_VERSION = _parse_version(cocotb.__version__)
 
 
 class JTAGDriver(CocoTBExtLogger):
@@ -96,12 +117,24 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
-        # GatedClock always uses 'units' parameter for version compatibility
-        # This is legitimate version compatibility - not a bug to hide
-        self.gc = GatedClock(
-            self.bus.tck, self.period, units=unit, gated=False, impl="py"  # type: ignore[arg-type]
-        )
-        start_soon(self.gc.start(start_high=False))
+        # GatedClock supports both 'unit' (2.0+) and 'units' (1.9.2) parameters
+        if COCOTB_VERSION >= (2, 0):
+            self.gc = GatedClock(
+                self.bus.tck,
+                self.period,
+                unit=cast(TimeUnit, unit),
+                gated=False,
+            )
+            start_soon(self.gc.start(start_high=False))
+        else:
+            # cocotb 1.9.2 uses 'units' parameter
+            self.gc = GatedClock(
+                self.bus.tck,
+                self.period,
+                units=unit,
+                gated=False,
+            )
+            start_soon(self.gc.start(start_high=False))
 
         if hasattr(self.bus, "trst"):
             self.reset = Reset(

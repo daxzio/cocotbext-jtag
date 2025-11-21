@@ -29,168 +29,106 @@
 
 from decimal import Decimal
 from fractions import Fraction
-from typing import Any, Coroutine, Literal, Union, TYPE_CHECKING
+from typing import Union, TYPE_CHECKING, cast
 
 import cocotb
 from cocotb.clock import Clock
 from cocotb.triggers import Timer
 
-# Version detection (Blender style)
-COCOTB_VERSION = tuple(int(x) for x in cocotb.__version__.split(".")[:2])
+# Compatibility imports for cocotb 2.0+
+try:
+    from cocotb._typing import TimeUnit
+except ImportError:
+    # cocotb 1.9.2 doesn't have TimeUnit
+    TimeUnit = str  # type: ignore[misc,assignment]
 
-# TimeUnit type handling
-if TYPE_CHECKING:
-    # For type checking, use the most specific type
-    TimeUnit = Literal["step", "fs", "ps", "ns", "us", "ms", "sec"]
-else:
-    # Runtime: choose based on cocotb version
-    if COCOTB_VERSION >= (2, 1):
-        # cocotb 2.1+: Use typing.Literal directly
-        TimeUnit = Literal["step", "fs", "ps", "ns", "us", "ms", "sec"]
-    elif COCOTB_VERSION >= (2, 0):
-        # cocotb 2.0.x: Import from cocotb._typing
-        from cocotb._typing import TimeUnit
+try:
+    from cocotb.task import Task
+
+    _HAS_TASK_TYPE = True
+except ImportError:
+    _HAS_TASK_TYPE = False
+    if TYPE_CHECKING:
+        from typing import Any as Task  # type: ignore[misc,assignment]
     else:
-        # cocotb 1.9.2: Use str
-        TimeUnit = str  # type: ignore
+        Task = None  # type: ignore[assignment]
 
-# LogicObject type handling
-if COCOTB_VERSION >= (2, 0):
-    from cocotb.handle import LogicObject
-else:
-    from cocotb.handle import ModifiableObject as LogicObject  # type: ignore
+
+# Detect cocotb version (similar to Blender module version checking)
+def _parse_version(version_str: str) -> tuple[int, ...]:
+    """Parse version string into tuple for comparison."""
+    try:
+        parts = version_str.split(".")
+        return tuple(int(x) for x in parts[:2] if x.isdigit())
+    except (ValueError, AttributeError):
+        return (0, 0)
+
+
+COCOTB_VERSION = _parse_version(cocotb.__version__)
 
 
 class GatedClock(Clock):
-    r"""Simple 50:50 duty cycle clock driver.
-
-    Instances of this class should call its :meth:`start` method
-    and pass the coroutine object to one of the functions in :ref:`task-management`.
-
-    This will create a clocking task that drives the signal at the
-    desired period/frequency.
-
-    Example:
-
-    .. code-block:: python
-
-        c = Clock(dut.clk, 10, "ns")
-        await cocotb.start(c.start())
-
-    Args:
-        signal: The clock pin/signal to be driven.
-        period: The clock period. Must convert to an even number of
-            timesteps.
-        units: One of
-            ``'step'``, ``'fs'``, ``'ps'``, ``'ns'``, ``'us'``, ``'ms'``, ``'sec'``.
-            When *units* is ``'step'``,
-            the timestep is determined by the simulator (see :make:var:`COCOTB_HDL_TIMEPRECISION`).
-
-    If you need more features like a phase shift and an asymmetric duty cycle,
-    it is simple to create your own clock generator (that you then :func:`~cocotb.start`):
-
-    .. code-block:: python
-
-        async def custom_clock():
-            # pre-construct triggers for performance
-            high_time = Timer(high_delay, unit="ns")
-            low_time = Timer(low_delay, unit="ns")
-            await Timer(initial_delay, unit="ns")
-            while True:
-                dut.clk.value = 1
-                await high_time
-                dut.clk.value = 0
-                await low_time
-
-    If you also want to change the timing during simulation,
-    use this slightly more inefficient example instead where
-    the :class:`Timer`\ s inside the while loop are created with
-    current delay values:
-
-    .. code-block:: python
-
-        async def custom_clock():
-            while True:
-                dut.clk.value = 1
-                await Timer(high_delay, unit="ns")
-                dut.clk.value = 0
-                await Timer(low_delay, unit="ns")
-
-
-        high_delay = low_delay = 100
-        await cocotb.start(custom_clock())
-        await Timer(1000, unit="ns")
-        high_delay = low_delay = 10  # change the clock speed
-        await Timer(1000, unit="ns")
-
-    .. versionchanged:: 1.5
-        Support ``'step'`` as the *units* argument to mean "simulator time step".
-
-    .. versionchanged:: 2.0
-        Passing ``None`` as the *units* argument was removed, use ``'step'`` instead.
-    """
-
     def __init__(
         self,
-        signal: LogicObject,
+        signal,
         period: Union[float, Fraction, Decimal],
-        units: TimeUnit = "step",
-        impl: Union[str, None] = None,
+        unit: Union[TimeUnit, str, None] = None,
+        units: Union[str, None] = None,  # For cocotb 1.9.2 compatibility
         gated: bool = True,
     ):
-        """Initialize GatedClock, handling both cocotb 1.9.2 and 2.0.0."""
-        self._unit = units  # Store units for cocotb 1.9.2 compatibility
-
-        if COCOTB_VERSION >= (2, 0):
-            # cocotb 2.0.0+: Clock accepts 'unit' parameter (singular) and 'impl'
-            Clock.__init__(
-                self,
-                signal,
-                period,
-                unit=units,  # type: ignore
-                impl=impl,  # type: ignore
-            )
+        # Handle both 'unit' (2.0+) and 'units' (1.9.2) parameters
+        if units is not None:
+            # cocotb 1.9.2 uses 'units'
+            if unit is not None:
+                raise ValueError("Cannot specify both 'unit' and 'units' parameters")
+            time_param = units
+        elif unit is not None:
+            # cocotb 2.0+ uses 'unit'
+            time_param = unit
         else:
-            # cocotb 1.9.2: Clock accepts 'units' parameter (plural) and no impl
-            Clock.__init__(
-                self,
-                signal,
-                period,
-                units=units,  # type: ignore
-            )
-            # Store impl manually for 1.9.2
-            if impl is not None:
-                object.__setattr__(self, "impl", impl)
+            # Default
+            time_param = "step"
 
+        # Call parent Clock.__init__ with appropriate parameter
+        if COCOTB_VERSION >= (2, 0):
+            Clock.__init__(self, signal, period, cast(TimeUnit, time_param))  # type: ignore[arg-type]
+        else:
+            # cocotb 1.9.2 uses 'units' parameter (str)
+            Clock.__init__(self, signal, period, time_param)  # type: ignore[arg-type]
         self.gated = gated
 
-    def start(self, start_high: bool = True) -> Coroutine[Any, Any, None]:  # type: ignore
-        r"""Clocking coroutine.  Start driving your clock by :func:`cocotb.start`\ ing a
-        call to this.
+    def start(self, start_high: bool = True):
+        """Start the gated clock.
 
-        Args:
-            start_high: Whether to start the clock with a ``1``
-                for the first half of the period.
-                Default is ``True``.
-
-                    .. versionadded:: 1.3
-
-                    .. versionchanged:: 2.0
-                        Removed ``cycles`` arguments for toggling for a finite amount of cyles.
-                        Use ``kill()`` on the clock task instead, or implement manually.
+        In cocotb 2.0+, this returns a Task.
+        In cocotb 1.9.2, this returns a coroutine that should be passed to cocotb.start().
         """
 
         async def drive() -> None:
-            t_high = self.period // 2
-            t_low = float(self.period) - float(t_high)
-
-            # Create Timer objects with appropriate parameter name for the cocotb version
             if COCOTB_VERSION >= (2, 0):
-                timer_high = Timer(t_high, unit=self._unit)  # type: ignore
-                timer_low = Timer(t_low, unit=self._unit)  # type: ignore
+                # cocotb 2.0+: period is the original value, need to calculate
+                period = self.period
+                time_unit = cast(TimeUnit, getattr(self, "unit", "step"))
+
+                # Ensure t_high is the same type as period to avoid type errors
+                t_high: Union[float, Fraction, Decimal]
+                if isinstance(period, Decimal):
+                    t_high = period / Decimal(2)
+                    timer_high = Timer(t_high, unit=time_unit)
+                    timer_low = Timer(period - t_high, unit=time_unit)  # type: ignore[operator]
+                elif isinstance(period, Fraction):
+                    t_high = period / Fraction(2)
+                    timer_high = Timer(t_high, unit=time_unit)
+                    timer_low = Timer(period - t_high, unit=time_unit)  # type: ignore[operator]
+                else:
+                    t_high = period / 2.0
+                    timer_high = Timer(t_high, unit=time_unit)
+                    timer_low = Timer(period - t_high, unit=time_unit)  # type: ignore[operator]
             else:
-                timer_high = Timer(t_high, units=self._unit)  # type: ignore
-                timer_low = Timer(t_low, units=self._unit)  # type: ignore
+                # cocotb 1.9.2: period and half_period are already in sim steps
+                # Timer accepts sim steps directly with units='step'
+                timer_high = Timer(getattr(self, "half_period", 0), units="step")  # type: ignore[attr-defined,arg-type]
+                timer_low = Timer(self.period - getattr(self, "half_period", 0), units="step")  # type: ignore[attr-defined,arg-type]
 
             if start_high:
                 self.signal.value = self.gated
@@ -201,4 +139,9 @@ class GatedClock(Clock):
                 self.signal.value = self.gated
                 await timer_high
 
-        return drive()
+        if COCOTB_VERSION >= (2, 0):
+            # cocotb 2.0+: return Task
+            return cocotb.start_soon(drive())
+        else:
+            # cocotb 1.9.2: return coroutine (caller should use cocotb.start())
+            return drive()
