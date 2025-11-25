@@ -227,25 +227,27 @@ class JTAGRxSm:
         self.dr_val_out = 0
         self.ir_cnt = 0
         self.ir_val_in = 0
+        self.ir_val_out = 0
 
     def update_state(self) -> None:
 
+        if "x" == self.bus.tdo.value:
+            tdo = 0
+        else:
+            tdo = int(self.bus.tdo.value)
         if self.state == "TEST_LOGIC_RESET" or self.state == "RUN_TEST_IDLE":
             self.dr_cnt = 0
             self.dr_val_in = 0
             self.dr_val_out = 0
             self.ir_cnt = 0
             self.ir_val_in = 0
+            self.ir_val_out = 0
         elif self.state == "CAPTURE_DR":
             self.dr_cnt = 0
             self.dr_val_in = 0
             self.dr_val_out = 0
         elif self.state == "SHIFT_DR":
             self.dr_val_in += int(self.bus.tdi.value) << self.dr_cnt
-            if "x" == self.bus.tdo.value:
-                tdo = 0
-            else:
-                tdo = int(self.bus.tdo.value)
             self.dr_val_out += tdo << self.dr_cnt
             self.dr_cnt += 1
         elif self.state == "UPDATE_DR":
@@ -253,8 +255,10 @@ class JTAGRxSm:
         elif self.state == "CAPTURE_IR":
             self.ir_cnt = 0
             self.ir_val_in = 0
+            self.ir_val_out = 0
         elif self.state == "SHIFT_IR":
             self.ir_val_in += int(self.bus.tdi.value) << self.ir_cnt
+            self.ir_val_out += tdo << self.ir_cnt
             self.ir_cnt += 1
         elif self.state == "UPDATE_IR":
             pass

@@ -139,7 +139,8 @@ all_libs_clean::
 
 waves:
 ifeq ($(SIM), icarus)
-	surfer sim_build/*.fst &
+# 	surfer sim_build/*.fst &
+	gtkwave sim_build/*.fst &
 else ifeq ($(SIM), ius)
 	simvision -waves waves.shm &
 else ifeq ($(SIM),verilator)

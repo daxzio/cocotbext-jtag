@@ -55,10 +55,13 @@ async def test_repeat(dut):
     await tb.jtag.set_reset(4)
     await tb.jtag.wait_clkn(20)
     await tb.jtag.read("IDCODE", 0x53817905)
+    assert tb.jtag.capture_ir() == 1
     await tb.jtag.read("IDCODE", 0x53817905)
     tb.jtag.explict_ir = True
     await tb.jtag.read("IDCODE", 0x53817905)
+    assert tb.jtag.capture_ir() == 1
     await tb.jtag.read("IDCODE", 0x53817905)
+    assert tb.jtag.capture_ir() == 1
 
 
 #

@@ -185,6 +185,30 @@ class JTAGDriver(CocoTBExtLogger):
     def active_device(self) -> JTAGDevice:
         return self.devices[self.device]
 
+    def capture_ir(self):
+        """Capture the Instruction Register (IR) value from the last UPDATE_IR state.
+
+        Returns:
+            The IR value captured from the TDO signal during the last IR shift operation.
+
+        Example:
+            >>> ir_value = jtag.capture_ir()
+            >>> print(f"IR value: 0x{ir_value:x}")
+        """
+        return self.ir_val_out
+
+    def capture_dr(self):
+        """Capture the Data Register (DR) value from the last UPDATE_DR state.
+
+        Returns:
+            The DR value captured from the TDO signal during the last DR shift operation.
+
+        Example:
+            >>> dr_value = jtag.capture_dr()
+            >>> print(f"DR value: 0x{dr_value:x}")
+        """
+        return self.dr_val_out
+
     def add_device(self, device: JTAGDevice) -> None:
         """Add a JTAG device to the chain.
 
@@ -227,10 +251,14 @@ class JTAGDriver(CocoTBExtLogger):
     async def _parse_tdo(self) -> None:
         while True:
             await RisingEdge(self.bus.tck)
+            if "UPDATE_IR" == self.rx_fsm.state:
+                self.ir_val_out = self.rx_fsm.ir_val_out
+                # print(f"{self.ir_val_out}")
             if "UPDATE_DR" == self.rx_fsm.state:
+                self.dr_val_out = self.rx_fsm.dr_val_out
                 mask = (2**self.dr_len) - 1
                 self.ret_val = (
-                    self.rx_fsm.dr_val_out >> (len(self.devices) - 1 - self.device)
+                    self.dr_val_out >> (len(self.devices) - 1 - self.device)
                 ) & mask
                 self.log.info(
                     f"Device: {self.device} -              Received: 0x{self.ret_val:08x}"

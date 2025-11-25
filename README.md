@@ -77,6 +77,8 @@ Once the module is instantiated, read and write operations can be initiated in a
 * `write(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`).
 * `read(addr, val=None, device=0)`: Read from _addr_ of _device_ (default: `0`). If _val_ present verify against returned value.
 * `read_idcode(device)`: Read device number _device_ and confirm it matched the IDCODE set for that device
+* `capture_ir()`: Return the Instruction Register value captured during the most recent IR shift operation
+* `capture_dr()`: Return the Data Register value captured during the most recent DR shift operation
 
 
 ### JTAG Device
