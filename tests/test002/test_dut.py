@@ -74,15 +74,21 @@ async def test_idcodes(dut):
 
     tb.jtag.explict_ir = True
     await tb.jtag.read("IDCODE", 0xA92434CF, device=2)
+    assert tb.jtag.capture_ir() == 0x211
     await tb.jtag.read("IDCODE", 0xC8215C33, device=1)
+    assert tb.jtag.capture_ir() == 0x211
     await tb.jtag.read("IDCODE", 0x53817905, device=0)
+    assert tb.jtag.capture_ir() == 0x211
 
     await tb.jtag.set_reset(4)
     await tb.jtag.wait_clkn(20)
     tb.jtag.explict_ir = False
     await tb.jtag.read("IDCODE", 0xA92434CF, device=2)
+    assert tb.jtag.capture_ir() == 0x211
     await tb.jtag.read("IDCODE", 0xC8215C33, device=1)
+    assert tb.jtag.capture_ir() == 0x211
     await tb.jtag.read("IDCODE", 0x53817905, device=0)
+    assert tb.jtag.capture_ir() == 0x211
 
 
 @test()
