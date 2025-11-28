@@ -231,7 +231,7 @@ class JTAGRxSm:
 
     def update_state(self) -> None:
 
-        if "x" == self.bus.tdo.value:
+        if "x" == self.bus.tdo.value or "U" == self.bus.tdo.value:
             tdo = 0
         else:
             tdo = int(self.bus.tdo.value)
