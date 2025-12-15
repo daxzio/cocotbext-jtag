@@ -48,7 +48,7 @@ jobs:
       - name: Setup Verilator
         uses: veryl-lang/setup-verilator@v1
       - name: Cache Icarus
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ needs.build_icarus_linux.outputs.cache_dir }}
           key: ${{ needs.build_icarus_linux.outputs.cache_key }}
@@ -106,7 +106,7 @@ jobs:
       - name: Setup Verilator
         uses: veryl-lang/setup-verilator@v1
       - name: Cache Icarus
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ needs.build_icarus_linux.outputs.cache_dir }}
           key: ${{ needs.build_icarus_linux.outputs.cache_key }}
