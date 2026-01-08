@@ -18,3 +18,5 @@ Methods
 .. automethod:: read_idcode
 .. automethod:: send_val
 .. automethod:: wait_clkn
+.. automethod:: capture_ir
+.. automethod:: capture_dr

@@ -15,6 +15,7 @@ Added
 * Comprehensive documentation with ReadTheDocs support
 * Enhanced docstrings for all public APIs
 * Improved README with better examples and installation instructions
+* Added ``capture_ir()`` and ``capture_dr()`` methods to ``JTAGDriver`` for accessing captured IR and DR register values
 
 Changed
 ~~~~~~~
