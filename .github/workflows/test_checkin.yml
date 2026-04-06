@@ -46,7 +46,7 @@ jobs:
         run: |
           echo "Runing tests with env set to : ${CI_TARGET}"
       - name: Setup Verilator
-        uses: veryl-lang/setup-verilator@v1
+        uses: veryl-lang/setup-verilator@v2
       - name: Cache Icarus
         uses: actions/cache@v5
         with:
@@ -104,7 +104,7 @@ jobs:
         run: |
           echo "Runing tests with env set to : ${CI_TARGET}"
       - name: Setup Verilator
-        uses: veryl-lang/setup-verilator@v1
+        uses: veryl-lang/setup-verilator@v2
       - name: Cache Icarus
         uses: actions/cache@v5
         with:
