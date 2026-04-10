@@ -1,7 +1,7 @@
 repos/
 __pycache__/
 .simvision/
-sim_build/
+sim_build*/
 *.svwf
 irun*
 libs/
@@ -16,3 +16,4 @@ dist/
 m3-dapswjdp/
 *.ghw
 *.o
+venv*/

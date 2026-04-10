@@ -2,13 +2,19 @@ XILINX_REV?=2021.2
 XILINX_PART?=xc7a100tcsg324-1
 CDSLIB?=./cds_${SIM}.lib
 COMPILE_LIBS?=../../libs
-RTLFLO_PATH?=../../rtlflo
+RTLFLO_PATH?=../rtlflo
+RTLFLO_PATH:=$(abspath ${RTLFLO_PATH})
+
+SYNTH_TOP?=${TOPLEVEL}
+BUILD_NAME?=${SYNTH_TOP}
+
 
 XILINX_LIB=${COMPILE_LIBS}/${SIM}/xilinx
 ifneq ($(XILINX_VIVADO),)
 XILINX_BASE?=${XILINX_VIVADO}/data
 XILINX_LIB=${COMPILE_LIBS}/${SIM}/xilinx-${XILINX_REV}
 endif
+
 ifeq ($(SIM),xcelium)
 CADENCE_VLOG?=xmvlog
 CADENCE_VHDL?=xmvhdl
@@ -16,6 +22,7 @@ else
 CADENCE_VLOG?=ncvlog
 CADENCE_VHDL?=ncvhdl
 endif
+# DEFINES += COCOTB_IUS=1
 
 ifneq (${USE_CDS},)
     ifeq ($(SIM),xcelium)
@@ -34,31 +41,16 @@ ifneq (${XILINX_BASE},)
 	UNISIMS_VER_CNT=`grep -s unisims_ver ${CDSLIB} | wc -l`
 	UNISIMS_VHDL_CNT=`grep -s unisim ${CDSLIB} | wc -l`
 
-    UNISIMS = \
-	    ${XILINX_BASE}/verilog/src/unisims/FDRE.v \
-	    ${XILINX_BASE}/verilog/src/unisims/FDSE.v \
-	    ${XILINX_BASE}/verilog/src/unisims/GND.v \
-	    ${XILINX_BASE}/verilog/src/unisims/LUT1.v \
-	    ${XILINX_BASE}/verilog/src/unisims/LUT2.v \
-	    ${XILINX_BASE}/verilog/src/unisims/LUT3.v \
-	    ${XILINX_BASE}/verilog/src/unisims/LUT4.v \
-	    ${XILINX_BASE}/verilog/src/unisims/LUT5.v \
-	    ${XILINX_BASE}/verilog/src/unisims/LUT6.v \
-	    ${XILINX_BASE}/verilog/src/unisims/MUXF7.v \
-	    ${XILINX_BASE}/verilog/src/unisims/MUXF8.v \
-	    ${XILINX_BASE}/verilog/src/unisims/SRL16E.v \
-	    ${XILINX_BASE}/verilog/src/unisims/SRLC32E.v \
-	    ${XILINX_BASE}/verilog/src/unisims/OBUFDS.v \
-	    ${XILINX_BASE}/verilog/src/unisims/BUFG.v \
-	    ${XILINX_BASE}/verilog/src/unisims/IBUF.v \
-	    ${XILINX_BASE}/verilog/src/unisims/MMCME2_ADV.v
+#     UNISIMS = \
+# 	    ${XILINX_BASE}/verilog/src/unisims/FDRE.v \
+# 	    ${XILINX_BASE}/verilog/src/unisims/FDSE.v \
+# 	    ${XILINX_BASE}/verilog/src/unisims/GND.v \
+# 	    ${XILINX_BASE}/verilog/src/unisims/MMCME2_ADV.v
 
     ifeq ($(SIM), icarus)
         ifneq ($(XILINX_SIM_SOURCES),)
 			COMPILE_ARGS += -y${XILINX_BASE}/verilog/src/unisims
 			COMPILE_ARGS += -s glbl
-		    VERILOG_SOURCES += \
-			    ${XILINX_BASE}/verilog/src/glbl.v
 		endif
 	else ifeq ($(SIM),xcelium)
 		COMPILE_ARGS += -top glbl
@@ -132,36 +124,56 @@ all_libs:: xilinx_library
 
 all_libs_clean:: xilinx_library_clean
 
+XILINX_GENERICS += \
+    ${GENERICS} \
+ 	G_FPGA_VERSION=32'h25031800 \
+
+XILINX_DEFINES += \
+    ${DEFINES} \
+
 FPGA_DESIGN:=\
     ${XILINX_SYNTH_SOURCES} \
+    ${MEM_FILE_SOURCES} \
     ${INT_VERILOG_SOURCES} \
     ${EXT_VERILOG_SOURCES} \
     ${INT_VHDL_SOURCES} \
     ${EXT_VHDL_SOURCES}
 
+XILINX_PRE_CUSTOM += \
+    set_msg_config -id {Synth 8-324} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Synth 8-327} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Synth 8-689} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Synth 8-6901} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Synth 8-6841} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Synth 8-7023} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Synth 8-7071} -new_severity {CRITICAL WARNING}; \
+    set_msg_config -id {Designutils 20-1280} -new_severity {WARNING}; \
+    set_msg_config -id {Designutils 20-1281} -new_severity {WARNING}; \
+    set_msg_config -id {Place 30-73} -new_severity {WARNING}; \
+    set_msg_config -suppress -id {DRC PDRC-34}; \
+
+XILINX_PRE_CUSTOM += \
+    add_files -fileset utils_1 -norecurse ${RTLFLO_PATH}/post_bitstream.tcl; \
+    add_files -fileset utils_1 -norecurse ${RTLFLO_PATH}/pre_synth.tcl; \
+    set_property STEPS.SYNTH_DESIGN.TCL.PRE [ get_files ${RTLFLO_PATH}/pre_synth.tcl -of [get_fileset utils_1] ] [get_runs synth_1];\
+    set_property STEPS.WRITE_BITSTREAM.TCL.POST [ get_files ${RTLFLO_PATH}/post_bitstream.tcl -of [get_fileset utils_1] ] [get_runs impl_1];\
+
+XILINX_POST_CUSTOM += \
+    set_property source_mgmt_mode All [current_project]; \
+    update_compile_order -fileset sources_1; \
+
 vivado_build:
 	@ export XILINX_PART="${XILINX_PART}" ; \
 	export XILINX_CONSTRAINTS="${XILINX_CONSTRAINTS}" ; \
-	export XILINX_CUSTOM=${XILINX_CUSTOM} ; \
+	export XILINX_PRE_CUSTOM='${XILINX_PRE_CUSTOM}' ; \
+	export XILINX_POST_CUSTOM='${XILINX_POST_CUSTOM}' ; \
 	export SYNTH_TOP=${SYNTH_TOP} ; \
 	export BUILD_NAME=${BUILD_NAME} ; \
 	export VERILOG_INCLUDE_DIRS="${VERILOG_INCLUDE_DIRS}" ; \
-	export GENERICS="${GENERICS}" ; \
+	export GENERICS="${XILINX_GENERICS}" ; \
+	export DEFINES="${XILINX_DEFINES}" ; \
 	export FPGA_DESIGN="${FPGA_DESIGN}" ; \
 		${RTLFLO_PATH}/vivado_helper.py
 
-git_xilinx:
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.ip_user_files/ip/*/*_sim_netlist.v -f -N --ignore-errors
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.runs/*/*_sim_netlist.v -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.srcs/sources_1/ip/*.xci* -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/common/common.xpr -f
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.ip_user_files/ip/*/*_sim_netlist.v -f --ignore-errors
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.gen/sources_1/ip/*/*_sim_netlist.v -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.runs/*/*_sim_netlist.v -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.srcs/sources_1/ip/*.xci* -f
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.srcs/sources_1/ip/*.prj -f
-	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/device/device.xpr -f
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.ip_user_files/ip/*/*_sim_netlist.v -f --ignore-errors
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.runs/*/*_sim_netlist.v -f --ignore-errors
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.srcs/sources_1/ip/*.xcix -f --ignore-errors
-# 	git add ${PROJ_HOME}/xilinx/ip_srcs/${XILINX_PART}/${XILINX_REV}/video/video.xpr -f --ignore-errors
+vivado_clean:
+	rm -rf build-*/ vivado* *.err .Xil/

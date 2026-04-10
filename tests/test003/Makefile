@@ -25,5 +25,5 @@ INT_VERILOG_SOURCES += \
 COCOTB_SOURCES = \
     ./dut.sv
 
-
+RTLFLO_PATH := $(abspath $(PROJ_HOME)/rtlflo)
 include ${PROJ_HOME}/rtlflo/cocotb_helper.mak

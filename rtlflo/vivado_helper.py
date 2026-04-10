@@ -1,22 +1,40 @@
 #!/usr/bin/env python
 import os
-from fpga import Project
+import re
+from pyfpga.vivado import Vivado
 
 
 class vivado_helper:
     def __init__(self):
         self.cwd = os.getcwd()
-        self.build_dir = f"{self.cwd}/build"
+        self.xilinx_rev = os.environ["XILINX_REV"]
         self.part = os.environ["XILINX_PART"]
         self.top = os.environ["SYNTH_TOP"]
         self.buildname = os.environ["BUILD_NAME"]
+        self.build_dir = f"{self.cwd}/build-{self.xilinx_rev}"
 
-        self.files = []
+        self.vlog_files = []
+        self.slog_files = []
+        self.vhdl_files = []
+        self.xcix_files = []
         if "FPGA_DESIGN" in os.environ:
             for x in os.environ["FPGA_DESIGN"].split():
                 if "" == x:
                     continue
-                self.files.append(x.rstrip().lstrip())
+                file = x.rstrip().lstrip()
+                _, ext = os.path.splitext(file)
+                if ".svh" == ext:
+                    raise Exception(
+                        'Do not add svh files to filelist, make sure it is included:\n`include "avsbus_pkg.svh"\nimport avsbus_pkg::*;'
+                    )
+                if ".sv" == ext:
+                    self.slog_files.append(file)
+                elif ".vhd" == ext or ".vhdl" == ext:
+                    self.vhdl_files.append(file)
+                elif ".xci" == ext or ".xcix" == ext:
+                    self.xcix_files.append(file)
+                else:
+                    self.vlog_files.append(file)
 
         self.constraints = []
         if "XILINX_CONSTRAINTS" in os.environ:
@@ -25,10 +43,15 @@ class vivado_helper:
                     continue
                 self.constraints.append(x.rstrip().lstrip())
 
-        self.customs = []
-        if "XILINX_CUSTOM" in os.environ:
-            for x in os.environ["XILINX_CUSTOM"].split(";"):
-                self.customs.append(x.rstrip().lstrip())
+        self.pre_customs = []
+        if "XILINX_PRE_CUSTOM" in os.environ:
+            for x in os.environ["XILINX_PRE_CUSTOM"].split(";"):
+                self.pre_customs.append(x.rstrip().lstrip())
+
+        self.post_customs = []
+        if "XILINX_POST_CUSTOM" in os.environ:
+            for x in os.environ["XILINX_POST_CUSTOM"].split(";"):
+                self.post_customs.append(x.rstrip().lstrip())
 
         self.include_dirs = []
         if "VERILOG_INCLUDE_DIRS" in os.environ:
@@ -38,38 +61,57 @@ class vivado_helper:
                 self.include_dirs.append(x.rstrip().lstrip())
 
         self.generics = os.environ["GENERICS"].rstrip().split()
+        self.defines = os.environ["DEFINES"].rstrip().split()
 
-        self.prj = Project("vivado", self.buildname)
+        self.prj = Vivado(self.buildname, odir=self.build_dir)
+        self.prj.set_debug()
 
     def create_project(self):
-        # self.prj = Project('vivado', 'solus_g2_test')
-        self.prj.clean()
-        self.prj.set_outdir(self.build_dir)
+        #         self.prj.clean()
         self.prj.set_part(self.part)
 
-        for custom in self.customs:
-            self.prj.add_hook(custom)
+        for pre_custom in self.pre_customs:
+            self.prj.add_hook("precfg", pre_custom)
 
         for generic in self.generics:
             g = generic.split("=")
-            self.prj.set_param(g[0], g[1])
+            self.prj.add_param(g[0], g[1])
+
+        for define in self.defines:
+            if re.search("=", define):
+                d = define.split("=")
+                self.prj.add_define(d[0], d[1])
+            else:
+                self.prj.add_define(define, 0)
 
         for constraint in self.constraints:
             c = constraint.split(",")
-            self.prj.add_files(c[0])
+            self.prj.add_cons(c[0])
             if len(c) > 1:
                 self.prj.add_hook(
                     f"set_property SCOPED_TO_REF {c[1]} [get_files {c[0]}]"
                 )
 
         for include_dir in self.include_dirs:
-            self.prj.add_path(include_dir)
+            self.prj.add_include(include_dir)
 
-        for file in self.files:
-            self.prj.add_files(file)
+        for file in self.vlog_files:
+            self.prj.add_vlog(file)
+        for file in self.slog_files:
+            self.prj.add_slog(file)
+        for file in self.vhdl_files:
+            self.prj.add_vhdl(file)
+        for file in self.xcix_files:
+            self.prj.add_vlog(file)
         self.prj.set_top(self.top)
+        #         self.prj.add_define("FPGA", 1)
+        #         self.prj.add_hook('postcfg', "set_property source_mgmt_mode All [current_project]")
+        #         self.prj.add_hook('postcfg', "update_compile_order -fileset sources_1")
+        #         self.prj.generate("prj")
+        for custom in self.post_customs:
+            self.prj.add_hook("postcfg", custom)
 
-        self.prj.generate("prj")
+        self.prj.make(last="cfg")
 
     def generate_bitstream(self):
         self.prj.generate("bit")

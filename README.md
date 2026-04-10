@@ -30,6 +30,29 @@ Installation for active development:
 
 See the `tests` directory for complete testbenches using these modules.
 
+### OpenOCD socket test (local)
+
+To run the test where OpenOCD connects to the cocotb JTAG socket (remote bitbang):
+
+1. **Prerequisites**: Icarus Verilog, OpenOCD, Python deps:
+   ```bash
+   pip install -r requirements.txt
+   pip install -e .
+   # Optional: sudo apt-get install openocd   # for full automated test
+   ```
+
+2. **Full test** (sim in background, then OpenOCD):
+   ```bash
+   ./run_openocd_socket_test.sh
+   ```
+
+3. **Sim only** (you run OpenOCD in another terminal):
+   ```bash
+   ./run_openocd_socket_test.sh --sim-only
+   # In another terminal:
+   cd tests/test_socket && openocd -f openocd_remote_bitbang.cfg -c "init; exit"
+   ```
+
 ### JTAG Bus
 
 The `JTAGBus` is used to map to a JTAG interface on the `dut`.  These hold instances of bus objects for the individual channels, which are currently extensions of `cocotb_bus.bus.Bus`.  Class methods `from_entity` and `from_prefix` are provided to facilitate signal default name matching.
@@ -76,9 +99,15 @@ Once the module is instantiated, read and write operations can be initiated in a
 * `send_val(addr, val, device, write)`: Send _addr_ to _device_ (default: `0`). The _val_ is used to write if _write_ is True or verify against if _write_ is False
 * `write(addr, val, device=0)`: Write _val_ to _addr_ of _device_ (default: `0`).
 * `read(addr, val=None, device=0)`: Read from _addr_ of _device_ (default: `0`). If _val_ present verify against returned value.
-* `read_idcode(device)`: Read device number _device_ and confirm it matched the IDCODE set for that device
+* `read_idcode(device=0, retry=0)`: Read the IDCODE register for _device_ and check it against the value configured on that device’s `JTAGDevice`. With `retry=0` (default), a single read is performed. With a positive `retry`, the driver may repeat an IDCODE shift and TAP reset until the captured value matches or the attempt limit is reached (see below).
 * `capture_ir()`: Return the Instruction Register value captured during the most recent IR shift operation
 * `capture_dr()`: Return the Data Register value captured during the most recent DR shift operation
+
+#### IDCODE retries (`read_idcode(..., retry=N)`)
+
+Use a positive `retry` when the first IDCODE read after reset or bring-up is unreliable. That often happens when the TAP or chain needs a few cycles to settle: power-on, asynchronous reset release, clock-domain crossing into the JTAG logic, or simulator startup ordering can produce a wrong or unknown value on the first DR capture even though the DUT is otherwise correct.
+
+With a positive `retry`, the driver repeatedly loads the IDCODE instruction, captures the DR, compares the result to the expected `idcode` on the active `JTAGDevice`, and runs a short TAP reset between attempts. If a match is found before the limit, it continues with a normal verified read; if not, it raises after `N` failed attempts. When the TAP is already stable, keep the default `retry=0` to avoid extra cycles.
 
 
 ### JTAG Device

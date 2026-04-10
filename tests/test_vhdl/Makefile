@@ -36,4 +36,5 @@ default: vlog2vhdl sim
 
 # ${VHDL_OUTPUT}: vlog2vhdl
 
+RTLFLO_PATH := $(abspath $(PROJ_HOME)/rtlflo)
 include ${PROJ_HOME}/rtlflo/cocotb_helper.mak
