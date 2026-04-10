@@ -15,7 +15,8 @@ endif
 
 include ${RTLFLO_PATH}/xilinx_helper.mak
 # Build VERILOG_SOURCES before including Makefile.sim so dependencies work
-VERILOG_DESIGN ?= $(EXT_VERILOG_SOURCES) $(INT_VERILOG_SOURCES) $(SIM_VERILOG_SOURCES) $(XILINX_SIM_SOURCES)
+# strip: empty *_VERILOG_SOURCES still leave spaces between words; GHDL skips sim if VERILOG_SOURCES is non-empty
+VERILOG_DESIGN ?= $(strip $(EXT_VERILOG_SOURCES) $(INT_VERILOG_SOURCES) $(SIM_VERILOG_SOURCES) $(XILINX_SIM_SOURCES))
 
 VERILOG_SOURCES += $(VERILOG_DESIGN)
 

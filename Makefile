@@ -5,8 +5,6 @@ default: verilog vhdl
 vhdl:
 	cd tests/test_vhdl ; make clean sim SIM=ghdl WAVES=0 && ../../rtlflo/combine_results.py
 
-IGNORE_ARGS += -Wno-WIDTHTRUNC
-IGNORE_ARGS += -Wno-WIDTHEXPAND
 verilog:
 	cd tests/test001 ; make clean sim WAVES=0 && ../../rtlflo/combine_results.py
 	cd tests/test002 ; make clean sim WAVES=0 && ../../rtlflo/combine_results.py
