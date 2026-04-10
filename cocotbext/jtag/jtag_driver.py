@@ -27,7 +27,6 @@ import datetime
 from random import seed, randint
 from math import ceil
 from typing import Union, cast
-from warnings import warn
 
 import cocotb
 from cocotb.triggers import RisingEdge
