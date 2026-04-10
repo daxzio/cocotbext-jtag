@@ -406,11 +406,11 @@ class JTAGDriver(CocoTBExtLogger):
         await self.send_val(addr, val, device, write=True)
         self.suppress_log = False
 
-    async def write_val(
-        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
-    ) -> None:
-        warn("This method is deprecated", DeprecationWarning, stacklevel=2)
-        await self.write(addr, val, device)
+    #     async def write_val(
+    #         self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
+    #     ) -> None:
+    #         warn("This method is deprecated", DeprecationWarning, stacklevel=2)
+    #         await self.write(addr, val, device)
 
     async def read(
         self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
@@ -432,12 +432,12 @@ class JTAGDriver(CocoTBExtLogger):
         await self.send_val(addr, val, device, write=False)
         return self.ret_val
 
-    async def read_val(
-        self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
-    ):
-        warn("This method is deprecated", DeprecationWarning, stacklevel=2)
-        ret_val = await self.read(addr, val, device)
-        return ret_val
+    #     async def read_val(
+    #         self, addr: Union[int, str, None], val: Union[int, None] = None, device: int = 0
+    #     ):
+    #         warn("This method is deprecated", DeprecationWarning, stacklevel=2)
+    #         ret_val = await self.read(addr, val, device)
+    #         return ret_val
 
     async def shift_dr(
         self, num: int = 32, val: Union[int, None] = None, device: int = 0
@@ -449,9 +449,20 @@ class JTAGDriver(CocoTBExtLogger):
         #             raise
         return self.ret_val
 
-    async def read_idcode(self, device: int = 0) -> None:
+    async def read_idcode(self, device: int = 0, retry: int = 0) -> None:
         self.device = device
         self.suppress_log = True
+        i = 0
+        while retry != 0:
+            await self.send_val("IDCODE", device=self.device, write=False)
+            await self.reset_fsm(7)
+            if self.ret_val == self.active_device.idcode:
+                self.log.info(f"IDCODE found after {i} retries")
+                break
+            i += 1
+            if i == retry:
+                raise Exception(f"IDCODE not found after {retry} retries")
+
         await self.send_val(
             "IDCODE", self.active_device.idcode, device=self.device, write=False
         )
