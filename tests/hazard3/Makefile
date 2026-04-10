@@ -8,6 +8,8 @@ WORK_BASE?=../..
 TOPLEVEL = dut
 MODULE = test_dut
 
+IGNORE_ARGS += -Wno-WIDTHTRUNC
+IGNORE_ARGS += -Wno-WIDTHEXPAND
 # XILINX_PART?=xc7a100tcsg324-1
 # XILINX_REV?=2021.2
 # ifneq (,$(wildcard ./makefile_synth.mak))

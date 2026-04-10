@@ -20,9 +20,9 @@
  */
 
 module jtag_reg #(
-    parameter IR_LEN    = 4,
-    parameter DR_LEN    = 1,
-    parameter IR_OPCODE = 4'b0
+    parameter IR_LEN = 4,
+    parameter DR_LEN = 1,
+    parameter [IR_LEN-1:0] IR_OPCODE = {IR_LEN{1'b0}}
 ) (
     input                   tck,
     input                   trst,
@@ -42,6 +42,16 @@ module jtag_reg #(
 
     assign tdo = dr_reg[0];
 
+    // Per DR_LEN so Verilator does not width-check the wrong shift expression (e.g. DR_LEN==1).
+    wire [DR_LEN-1:0] dr_shift_next;
+    generate
+        if (DR_LEN == 1) begin : gen_dr_shift_1
+            assign dr_shift_next = tdi;
+        end else begin : gen_dr_shift_n
+            assign dr_shift_next = {tdi, dr_reg[DR_LEN-1:1]};
+        end
+    endgenerate
+
     always @(posedge tck or negedge trst) begin
         if (~trst) begin
             dr_reg          <= 0;
@@ -53,11 +63,7 @@ module jtag_reg #(
             if (ir_reg == IR_OPCODE) begin
                 if (state_capturedr) dr_reg <= dr_dataIn;
                 else if (state_shiftdr) begin
-                    if (DR_LEN == 1) dr_reg <= tdi;
-                    /* verilator lint_off SELRANGE */
-                    else
-                        dr_reg <= {tdi, dr_reg[DR_LEN-1:1]};
-                    /* verilator lint_on SELRANGE */
+                    dr_reg <= dr_shift_next;
                 end else if (state_updatedr) begin
                     dr_dataOut      <= dr_reg;
                     dr_dataOutReady <= 1;

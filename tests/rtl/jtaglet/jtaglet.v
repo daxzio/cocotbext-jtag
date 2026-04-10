@@ -39,8 +39,9 @@ module jtaglet #(
     output                    userOp_ready
 );
 
-    localparam USERDATA_OP = 4'b1000;
-    localparam USEROP_OP = 4'b1001;
+    // Opcodes are IR_LEN bits (zero-padded when IR_LEN > 4; requires IR_LEN >= 4)
+    localparam [IR_LEN-1:0] USERDATA_OP = (IR_LEN >= 4) ? {{(IR_LEN - 4) {1'b0}}, 4'b1000} : {IR_LEN{1'b0}};
+    localparam [IR_LEN-1:0] USEROP_OP = (IR_LEN >= 4) ? {{(IR_LEN - 4) {1'b0}}, 4'b1001} : {IR_LEN{1'b0}};
     localparam IDCODE_OP = {{(IR_LEN - 1) {1'b1}}, 1'b0};  //e.g. b1110
     localparam BYPASS_OP = {IR_LEN{1'b1}};  // e.g. b1111 (required bit pattern per spec)
 
