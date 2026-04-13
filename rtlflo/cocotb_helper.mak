@@ -24,6 +24,7 @@ ifneq ($(strip $(INT_VHDL_SOURCES)$(EXT_VHDL_SOURCES)),)
 VHDL_SOURCES += $(INT_VHDL_SOURCES) $(EXT_VHDL_SOURCES)
 endif
 
+SIM_BUILD:=sim_build_${SIM}
 include $(shell cocotb-config --makefiles)/Makefile.sim
 include ${RTLFLO_PATH}/verilator_helper.mak
 include ${RTLFLO_PATH}/svlint_helper.mak
@@ -36,7 +37,6 @@ export COCOTB_RUNNING
 ifeq ($(TOPLEVEL_LANG),verilog)
 	ifeq ($(SIM), icarus)
         DEFINES += COCOTB_ICARUS=1
-        SIM_BUILD:=sim_build_icarus
 	else ifeq ($(SIM), ius)
         DEFINES += COCOTB_CADENCE=1
         DEFINES += COCOTB_IUS=1
@@ -49,7 +49,6 @@ ifeq ($(TOPLEVEL_LANG),verilog)
 		COMPILE_ARGS += -disable_sem2009
 		COMPILE_ARGS += -sv
 # 		COMPILE_ARGS += -top ${TOPLEVEL}
-        SIM_BUILD:=sim_build_xcelium
 	else ifeq ($(SIM),verilator)
         #DEFINES += COCOTB_VERILATOR=1
 		COMPILE_ARGS += --no-timing
@@ -57,9 +56,8 @@ ifeq ($(TOPLEVEL_LANG),verilog)
 # 		COMPILE_ARGS += OPT_FAST="-O0"
 		COMPILE_ARGS += --compiler clang
 	    COMPILE_ARGS += ${IGNORE_ARGS}
-        SIM_BUILD:=sim_build_verilator
-	else ifneq ($(filter $(SIM),questa modelsim ),)
-        SIM_BUILD:=sim_build_questa
+	# else ifneq ($(filter $(SIM),questa modelsim ),)
+    #     SIM_BUILD:=sim_build_questa
 	endif
 endif
 

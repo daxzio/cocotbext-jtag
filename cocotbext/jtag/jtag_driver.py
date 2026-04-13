@@ -116,7 +116,6 @@ class JTAGDriver(CocoTBExtLogger):
         self.rx_fsm = JTAGRxSm(self.bus)
         self.ret_val = None
 
-        # GatedClock supports both 'unit' (2.0+) and 'units' (1.9.2) parameters
         if COCOTB_VERSION >= (2, 0):
             self.gc = GatedClock(
                 self.bus.tck,
@@ -124,9 +123,8 @@ class JTAGDriver(CocoTBExtLogger):
                 unit=cast(TimeUnit, unit),
                 gated=False,
             )
-            start_soon(self.gc.start(start_high=False))
+            self.gc.start(start_high=False)
         else:
-            # cocotb 1.9.2 uses 'units' parameter
             self.gc = GatedClock(
                 self.bus.tck,
                 self.period,
