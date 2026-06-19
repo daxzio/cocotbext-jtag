@@ -131,12 +131,15 @@ class GatedClock(Clock):
                 timer_low = Timer(self.period - getattr(self, "half_period", 0), units="step")  # type: ignore[attr-defined,arg-type]
 
             if start_high:
-                self.signal.value = self.gated
+                if self.gated:
+                    self.signal.value = 1
                 await timer_high
             while True:
-                self.signal.value = 0
+                if self.gated:
+                    self.signal.value = 0
                 await timer_low
-                self.signal.value = self.gated
+                if self.gated:
+                    self.signal.value = 1
                 await timer_high
 
         if COCOTB_VERSION >= (2, 0):
