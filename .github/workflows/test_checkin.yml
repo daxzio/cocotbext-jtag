@@ -63,7 +63,7 @@ jobs:
           version: nightly
           backend: llvm
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -121,7 +121,7 @@ jobs:
           version: nightly
           backend: llvm
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
           cache: 'pip'
@@ -159,7 +159,7 @@ jobs:
       - name: Install OpenOCD
         run: sudo apt-get update && sudo apt-get install -y openocd netcat-openbsd
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: "pip"
